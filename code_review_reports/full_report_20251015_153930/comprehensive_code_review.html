@@ -1,0 +1,1189 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive Code Review Report</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #1e40af;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #3b82f6;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text: #1f2937;
+            --border: #e5e7eb;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background: var(--background);
+            padding: 0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--surface);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+        
+        .header .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        
+        /* Executive Summary */
+        .executive-summary {
+            padding: 2rem;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .metric-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+            transition: transform 0.2s;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-label {
+            color: #6b7280;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .metric-subtext {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            margin-top: 0.25rem;
+        }
+        
+        .score-excellent { color: var(--success); }
+        .score-good { color: var(--primary); }
+        .score-fair { color: var(--warning); }
+        .score-poor { color: var(--error); }
+        
+        /* Sections */
+        .section {
+            padding: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .section:last-child {
+            border-bottom: none;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .section-title i {
+            font-size: 1.25rem;
+        }
+        
+        /* Status Badges */
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .status-success { background: var(--success); color: white; }
+        .status-warning { background: var(--warning); color: white; }
+        .status-error { background: var(--error); color: white; }
+        .status-info { background: var(--info); color: white; }
+        
+        /* Expandable Sections */
+        .expandable-section {
+            margin-top: 1.5rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .expandable-header {
+            background: #f8fafc;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        
+        .expandable-header:hover {
+            background: #f1f5f9;
+        }
+        
+        .expandable-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .expandable-icon {
+            transition: transform 0.3s ease;
+        }
+        
+        .expandable-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: white;
+        }
+        
+        .expandable-content.expanded {
+            max-height: 1000px;
+            overflow-y: auto;
+        }
+        
+        .tool-results {
+            padding: 1.5rem;
+            background: white;
+        }
+        
+        .tool-result {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #f8fafc;
+        }
+        
+        .tool-name {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .tool-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .requirement-item {
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 6px;
+            border-left: 4px solid var(--success);
+            background: #f0fdf4;
+        }
+        
+        .requirement-missing {
+            border-left-color: var(--error);
+            background: #fef2f2;
+        }
+        
+        .requirement-partial {
+            border-left-color: var(--warning);
+            background: #fffbeb;
+        }
+        
+        .file-list {
+            margin: 1.5rem 0;
+        }
+        
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            background: var(--surface);
+        }
+        
+        .file-name {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #9ca3af;
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+            background: var(--background);
+        }
+        
+        @media (max-width: 768px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="fas fa-code"></i> Comprehensive Code Review Report</h1>
+            <div class="subtitle">AI-Powered Code Quality & Requirements Analysis</div>
+        </div>
+        
+        <!-- Executive Summary -->
+        <div class="executive-summary">
+            <h2 class="section-title"><i class="fas fa-chart-line"></i> Executive Summary</h2>
+            <div class="summary-grid">
+                <div class="metric-card">
+                    <div class="metric-value score-poor">0/10</div>
+                    <div class="metric-label">Overall Quality Score</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">3</div>
+                    <div class="metric-label">Files Analyzed</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">14</div>
+                    <div class="metric-label">Standards Issues</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value score-poor">0%</div>
+                    <div class="metric-label">Requirements Coverage</div>
+                </div>
+            </div>
+        </div>
+        
+        
+                <div class="section">
+                    <h2 class="section-title"><i class="fas fa-tasks"></i> Requirements Validation</h2>
+                    <div class="status-badge status-info">NOT PERFORMED</div>
+                    <p style="margin-top: 1rem; color: #6b7280;">No requirements were provided for validation.</p>
+                </div>
+                
+        
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-ruler"></i> Code Standards Analysis</h2>
+            <div class="status-badge status-error">
+                14 ISSUES FOUND
+            </div>
+            <p style="margin-top: 1rem; color: #6b7280;">
+                Found 14 code standards issues across 3 files.
+            </p>
+            
+            <div class='file-list'><h4>File Analysis:</h4>
+                <div class="file-item">
+                    <div class="file-name">
+                        <i class="fas fa-file-code"></i>
+                        auth.py
+                    </div>
+                    <div class="file-stats">
+                        <span class="status-badge status-warning">4 issues</span>
+                    </div>
+                </div>
+                
+                <div class="file-item">
+                    <div class="file-name">
+                        <i class="fas fa-file-code"></i>
+                        sample.py
+                    </div>
+                    <div class="file-stats">
+                        <span class="status-badge status-warning">5 issues</span>
+                    </div>
+                </div>
+                
+                <div class="file-item">
+                    <div class="file-name">
+                        <i class="fas fa-file-code"></i>
+                        utils.py
+                    </div>
+                    <div class="file-stats">
+                        <span class="status-badge status-warning">5 issues</span>
+                    </div>
+                </div>
+                </div>
+            
+            <!-- Expandable Tool Results -->
+            <div class="expandable-section">
+                <div class="expandable-header">
+                    <div class="expandable-title">
+                        <i class="fas fa-code"></i>
+                        View Detailed Standards Analysis
+                    </div>
+                    <i class="fas fa-chevron-down expandable-icon"></i>
+                </div>
+                <div class="expandable-content">
+                    <div class="tool-results">
+                        
+                <div style="margin-bottom: 2rem;">
+                    <h4>auth.py</h4>
+                    
+                    <div class="tool-result">
+                        <div class="tool-name">Pylint</div>
+                        <div class="tool-output">Line 18: Trailing whitespace (trailing-whitespace)
+Line 23: Trailing whitespace (trailing-whitespace)
+Line 33: Trailing whitespace (trailing-whitespace)
+Line 35: Line too long (140/100) (line-too-long)
+Line 37: Trailing whitespace (trailing-whitespace)
+Line 40: Trailing whitespace (trailing-whitespace)
+Line 44: Trailing whitespace (trailing-whitespace)
+Line 48: Trailing whitespace (trailing-whitespace)
+Line 51: Line too long (111/100) (line-too-long)
+Line 52: Trailing whitespace (trailing-whitespace)
+Line 59: Trailing whitespace (trailing-whitespace)
+Line 62: Trailing whitespace (trailing-whitespace)
+Line 66: Trailing whitespace (trailing-whitespace)
+Line 69: Trailing whitespace (trailing-whitespace)
+Line 77: Trailing whitespace (trailing-whitespace)
+Line 81: Trailing whitespace (trailing-whitespace)
+Line 83: Trailing whitespace (trailing-whitespace)
+Line 87: Trailing whitespace (trailing-whitespace)
+Line 92: Trailing whitespace (trailing-whitespace)
+Line 148: Trailing whitespace (trailing-whitespace)
+Line 152: Trailing whitespace (trailing-whitespace)
+Line 156: Trailing whitespace (trailing-whitespace)
+Line 160: Trailing whitespace (trailing-whitespace)
+Line 164: Trailing whitespace (trailing-whitespace)
+Line 171: Trailing whitespace (trailing-whitespace)
+Line 175: Trailing whitespace (trailing-whitespace)
+Line 181: Final newline missing (missing-final-newline)
+Line 1: Missing module docstring (missing-module-docstring)
+Line 14: Missing class docstring (missing-class-docstring)
+Line 57: No exception type(s) specified (bare-except)
+Line 117: Use of eval (eval-used)
+Line 125: Using open without explicitly specifying an encoding (unspecified-encoding)
+Line 131: Using open without explicitly specifying an encoding (unspecified-encoding)
+Line 135: Constant name "unused_variable" doesn't conform to UPPER_CASE naming style (invalid-name)
+Line 136: Constant name "another_unused" doesn't conform to UPPER_CASE naming style (invalid-name)
+Line 139: Missing function or method docstring (missing-function-docstring)
+Line 142: Missing function or method docstring (missing-function-docstring)
+Line 169: Catching too general exception Exception (broad-exception-caught)
+Line 177: Unused variable 'malicious_data' (unused-variable)
+Line 2: Unused import os (unused-import)</div>
+                    </div>
+                    
+                    <div class="tool-result">
+                        <div class="tool-name">Flake8</div>
+                        <div class="tool-output">C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:2:1: F401 'os' imported but unused
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:14:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:18:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:23:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:33:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:35:89: E501 line too long (140 > 88 characters)
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:37:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:40:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:44:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:48:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:51:89: E501 line too long (111 > 88 characters)
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:52:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:57:9: E722 do not use bare 'except'
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:59:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:62:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:65:89: E501 line too long (96 > 88 characters)
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:66:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:69:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:77:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:81:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:83:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:87:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:92:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:102:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:106:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:110:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:115:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:119:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:123:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:128:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:135:1: E305 expected 2 blank lines after class or function definition, found 1
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:139:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:142:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:145:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:148:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:152:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:156:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:160:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:164:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:171:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:175:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:177:5: F841 local variable 'malicious_data' is assigned to but never used
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:180:1: E305 expected 2 blank lines after class or function definition, found 1
+C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:181:20: W292 no newline at end of file</div>
+                    </div>
+                    
+                    <div class="tool-result">
+                        <div class="tool-name">Ruff</div>
+                        <div class="tool-output">F401 [*] `os` imported but unused
+ --> tmp5c6uvjk9.py:2:8
+  |
+1 | # src/auth.py
+2 | import os
+  |        ^^
+3 | import json
+4 | import sqlite3
+  |
+help: Remove unused import: `os`
+
+E722 Do not use bare `except`
+  --> tmp5c6uvjk9.py:57:9
+   |
+55 |             self.conn.commit()
+56 |             return True
+57 |         except:
+   |         ^^^^^^
+58 |             return False
+   |
+
+F841 Local variable `malicious_data` is assigned to but never used
+   --> tmp5c6uvjk9.py:177:5
+    |
+176 |     # Unsafe deserialization
+177 |     malicious_data = "__import__('os').system('rm -rf /')"
+    |     ^^^^^^^^^^^^^^
+178 |     # unsafe_deserialize(malicious_data)  # Commented out for safety
+    |
+help: Remove assignment to unused variable `malicious_data`</div>
+                    </div>
+                    
+                    <div class="tool-result">
+                        <div class="tool-name">Bandit</div>
+                        <div class="tool-output">Run started:2025-10-15 10:08:48.079662
+
+Test results:
+>> Issue: [B108:hardcoded_tmp_directory] Probable insecure usage of temp file/directory.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-377 (https://cwe.mitre.org/data/definitions/377.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b108_hardcoded_tmp_directory.html
+   Location: C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:10:16
+9	# Global variables - bad practice
+10	DATABASE_PATH = "/tmp/users.db"
+11	SECRET_KEY = "hardcoded_secret_key_12345"  # Hardcoded secret
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'hardcoded_secret_key_12345'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b105_hardcoded_password_string.html
+   Location: C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:11:13
+10	DATABASE_PATH = "/tmp/users.db"
+11	SECRET_KEY = "hardcoded_secret_key_12345"  # Hardcoded secret
+12	ADMIN_PASSWORD = "admin123"  # Hardcoded password
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'admin123'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b105_hardcoded_password_string.html
+   Location: C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:12:17
+11	SECRET_KEY = "hardcoded_secret_key_12345"  # Hardcoded secret
+12	ADMIN_PASSWORD = "admin123"  # Hardcoded password
+13	
+
+--------------------------------------------------
+>> Issue: [B608:hardcoded_sql_expressions] Possible SQL injection vector through string-based query construction.
+   Severity: Medium   Confidence: Low
+   CWE: CWE-89 (https://cwe.mitre.org/data/definitions/89.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b608_hardcoded_sql_expressions.html
+   Location: C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:51:16
+50	        cursor = self.conn.cursor()
+51	        query = f"INSERT INTO users (username, password, email) VALUES ('{username}', '{password}', '{email}')"
+52	        
+
+--------------------------------------------------
+>> Issue: [B608:hardcoded_sql_expressions] Possible SQL injection vector through string-based query construction.
+   Severity: Medium   Confidence: Low
+   CWE: CWE-89 (https://cwe.mitre.org/data/definitions/89.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b608_hardcoded_sql_expressions.html
+   Location: C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:65:16
+64	        cursor = self.conn.cursor()
+65	        query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
+66	        
+
+--------------------------------------------------
+>> Issue: [B608:hardcoded_sql_expressions] Possible SQL injection vector through string-based query construction.
+   Severity: Medium   Confidence: Low
+   CWE: CWE-89 (https://cwe.mitre.org/data/definitions/89.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b608_hardcoded_sql_expressions.html
+   Location: C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:89:16
+88	        # Insecure direct object reference
+89	        query = f"SELECT * FROM users WHERE id = {user_id}"
+90	        cursor.execute(query)
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:104:11
+103	    """Weak password hashing using MD5"""
+104	    return hashlib.md5(password.encode()).hexdigest()
+105	
+
+--------------------------------------------------
+>> Issue: [B307:blacklist] Use of possibly insecure function - consider using safer ast.literal_eval.
+   Severity: Medium   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b307-eval
+   Location: C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:117:11
+116	    """Unsafe deserialization"""
+117	    return eval(data)  # Dangerous!
+118	
+
+--------------------------------------------------
+>> Issue: [B108:hardcoded_tmp_directory] Probable insecure usage of temp file/directory.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-377 (https://cwe.mitre.org/data/definitions/377.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b108_hardcoded_tmp_directory.html
+   Location: C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:131:14
+130	    log_entry = f"LOG: {message}\n"
+131	    with open("/tmp/app.log", "a") as f:
+132	        f.write(log_entry)  # No sanitization
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'test123'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b105_hardcoded_password_string.html
+   Location: C:\Users\thala\AppData\Local\Temp\tmp5c6uvjk9.py:151:16
+150	    test_user = "test"
+151	    test_pass = "test123"
+152	    
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 120
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 3
+		Medium: 6
+		High: 1
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 3
+		Medium: 5
+		High: 2
+Files skipped (0):</div>
+                    </div>
+                    
+                </div>
+                
+                <div style="margin-bottom: 2rem;">
+                    <h4>sample.py</h4>
+                    
+                    <div class="tool-result">
+                        <div class="tool-name">Pylint</div>
+                        <div class="tool-output">Line 18: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+Line 70: Bad indentation. Found 1 spaces, expected 4 (bad-indentation)
+Line 71: Bad indentation. Found 2 spaces, expected 8 (bad-indentation)
+Line 72: Bad indentation. Found 2 spaces, expected 8 (bad-indentation)
+Line 85: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+Line 86: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+Line 87: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+Line 88: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+Line 89: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+Line 90: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+Line 92: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+Line 93: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+Line 94: Bad indentation. Found 2 spaces, expected 4 (bad-indentation)
+Line 1: Missing module docstring (missing-module-docstring)
+Line 14: Redefining built-in 'list' (redefined-builtin)
+Line 4: Multiple imports on one line (os, sys, json, sqlite3, hashlib, subprocess) (multiple-imports)
+Line 17: Missing function or method docstring (missing-function-docstring)
+Line 21: Missing function or method docstring (missing-function-docstring)
+Line 26: Missing function or method docstring (missing-function-docstring)
+Line 31: Missing function or method docstring (missing-function-docstring)
+Line 33: Consider using 'with' for resource-allocating operations (consider-using-with)
+Line 36: Missing function or method docstring (missing-function-docstring)
+Line 38: Use of eval (eval-used)
+Line 41: Missing function or method docstring (missing-function-docstring)
+Line 46: Missing function or method docstring (missing-function-docstring)
+Line 56: Missing function or method docstring (missing-function-docstring)
+Line 59: Redefining name 'cfg' from outer scope (line 93) (redefined-outer-name)
+Line 58: Using open without explicitly specifying an encoding (unspecified-encoding)
+Line 63: Missing function or method docstring (missing-function-docstring)
+Line 69: Missing function or method docstring (missing-function-docstring)
+Line 70: Using a conditional statement with a constant value (using-constant-test)
+Line 75: Missing function or method docstring (missing-function-docstring)
+Line 75: Function name "UnusedFunction" doesn't conform to snake_case naming style (invalid-name)
+Line 79: String statement has no effect (pointless-string-statement)
+Line 4: Unused import sys (unused-import)</div>
+                    </div>
+                    
+                    <div class="tool-result">
+                        <div class="tool-name">Flake8</div>
+                        <div class="tool-output">C:\Users\thala\AppData\Local\Temp\tmpby329152.py:4:1: F401 'sys' imported but unused
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:4:10: E401 multiple imports on one line
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:13:2: E225 missing whitespace around operator
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:14:10: E231 missing whitespace after ','
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:14:12: E231 missing whitespace after ','
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:17:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:17:10: E231 missing whitespace after ','
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:18:3: E111 indentation is not a multiple of 4
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:18:13: E222 multiple spaces after operator
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:21:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:26:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:31:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:36:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:41:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:46:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:56:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:63:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:69:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:70:1: W191 indentation contains tabs
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:70:1: E101 indentation contains mixed spaces and tabs
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:70:2: E117 over-indented
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:71:1: W191 indentation contains tabs
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:71:1: E101 indentation contains mixed spaces and tabs
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:71:3: E111 indentation is not a multiple of 4
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:71:8: E211 whitespace before '('
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:72:1: W191 indentation contains tabs
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:72:1: E101 indentation contains mixed spaces and tabs
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:72:3: E111 indentation is not a multiple of 4
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:75:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:79:1: E305 expected 2 blank lines after class or function definition, found 1
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:83:12: E225 missing whitespace around operator
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:84:3: E114 indentation is not a multiple of 4 (comment)
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:85:3: E111 indentation is not a multiple of 4
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:86:3: E111 indentation is not a multiple of 4
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:86:8: E203 whitespace before ','
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:86:9: E231 missing whitespace after ','
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:87:3: E111 indentation is not a multiple of 4
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:88:3: E111 indentation is not a multiple of 4
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:89:3: E111 indentation is not a multiple of 4
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:90:3: E111 indentation is not a multiple of 4
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:91:3: E114 indentation is not a multiple of 4 (comment)
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:92:3: E111 indentation is not a multiple of 4
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:93:3: E111 indentation is not a multiple of 4
+C:\Users\thala\AppData\Local\Temp\tmpby329152.py:94:3: E111 indentation is not a multiple of 4</div>
+                    </div>
+                    
+                    <div class="tool-result">
+                        <div class="tool-name">Ruff</div>
+                        <div class="tool-output">E401 [*] Multiple imports on one line
+ --> tmpby329152.py:4:1
+  |
+2 | # Intentionally insecure & non-idiomatic Python for testing analyzers.
+3 |
+4 | import os, sys, json, sqlite3, hashlib, subprocess
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+5 |
+6 | # Hardcoded credentials (Bandit will flag)
+  |
+help: Split imports
+
+F401 [*] `sys` imported but unused
+ --> tmpby329152.py:4:12
+  |
+2 | # Intentionally insecure & non-idiomatic Python for testing analyzers.
+3 |
+4 | import os, sys, json, sqlite3, hashlib, subprocess
+  |            ^^^
+5 |
+6 | # Hardcoded credentials (Bandit will flag)
+  |
+help: Remove unused import: `sys`</div>
+                    </div>
+                    
+                    <div class="tool-result">
+                        <div class="tool-name">Bandit</div>
+                        <div class="tool-output">Run started:2025-10-15 10:08:52.594931
+
+Test results:
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: C:\Users\thala\AppData\Local\Temp\tmpby329152.py:4:0
+3	
+4	import os, sys, json, sqlite3, hashlib, subprocess
+5	
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'P@ssw0rd123!'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b105_hardcoded_password_string.html
+   Location: C:\Users\thala\AppData\Local\Temp\tmpby329152.py:7:14
+6	# Hardcoded credentials (Bandit will flag)
+7	DB_PASSWORD = "P@ssw0rd123!"
+8	API_KEY = "AKIAEXAMPLESECRETKEY"
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 's3cr3t-token-123'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b105_hardcoded_password_string.html
+   Location: C:\Users\thala\AppData\Local\Temp\tmpby329152.py:9:15
+8	API_KEY = "AKIAEXAMPLESECRETKEY"
+9	SECRET_TOKEN = "s3cr3t-token-123"
+10	
+
+--------------------------------------------------
+>> Issue: [B605:start_process_with_a_shell] Starting a process with a shell: Seems safe, but may be changed in the future, consider rewriting without shell
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b605_start_process_with_a_shell.html
+   Location: C:\Users\thala\AppData\Local\Temp\tmpby329152.py:28:4
+27	    # no checks; dangerous hardcoded path and shell=True like behavior
+28	    os.system("rm -rf /var/log")
+29	
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b607_start_process_with_partial_path.html
+   Location: C:\Users\thala\AppData\Local\Temp\tmpby329152.py:28:4
+27	    # no checks; dangerous hardcoded path and shell=True like behavior
+28	    os.system("rm -rf /var/log")
+29	
+
+--------------------------------------------------
+>> Issue: [B602:subprocess_popen_with_shell_equals_true] subprocess call with shell=True identified, security issue.
+   Severity: High   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b602_subprocess_popen_with_shell_equals_true.html
+   Location: C:\Users\thala\AppData\Local\Temp\tmpby329152.py:33:4
+32	    # imagine cmd comes from user input — vulnerable to injection
+33	    subprocess.Popen(cmd, shell=True)
+34	
+
+--------------------------------------------------
+>> Issue: [B307:blacklist] Use of possibly insecure function - consider using safer ast.literal_eval.
+   Severity: Medium   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b307-eval
+   Location: C:\Users\thala\AppData\Local\Temp\tmpby329152.py:38:11
+37	    # insecure: executing arbitrary expressions
+38	    return eval(expr)
+39	
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: C:\Users\thala\AppData\Local\Temp\tmpby329152.py:43:11
+42	    # weak cryptography (md5) — Bandit will flag
+43	    return hashlib.md5(pwd.encode()).hexdigest()
+44	
+
+--------------------------------------------------
+>> Issue: [B108:hardcoded_tmp_directory] Probable insecure usage of temp file/directory.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-377 (https://cwe.mitre.org/data/definitions/377.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b108_hardcoded_tmp_directory.html
+   Location: C:\Users\thala\AppData\Local\Temp\tmpby329152.py:47:27
+46	def add_user_to_db(username, password):
+47	    conn = sqlite3.connect("/tmp/users.db")
+48	    cursor = conn.cursor()
+
+--------------------------------------------------
+>> Issue: [B608:hardcoded_sql_expressions] Possible SQL injection vector through string-based query construction.
+   Severity: Medium   Confidence: Low
+   CWE: CWE-89 (https://cwe.mitre.org/data/definitions/89.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b608_hardcoded_sql_expressions.html
+   Location: C:\Users\thala\AppData\Local\Temp\tmpby329152.py:50:10
+49	    # BAD: direct string interpolation into SQL (SQLi)
+50	    sql = f"INSERT INTO users (username, password) VALUES ('{username}', '{password}')"
+51	    cursor.execute(sql)
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 52
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 5
+		Medium: 3
+		High: 2
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 1
+		Medium: 3
+		High: 6
+Files skipped (0):</div>
+                    </div>
+                    
+                    <div class="tool-result">
+                        <div class="tool-name">MyPy</div>
+                        <div class="tool-output">tmpby329152.py:23: error: Incompatible return value type (got "str", expected "int")  [return-value]</div>
+                    </div>
+                    
+                </div>
+                
+                <div style="margin-bottom: 2rem;">
+                    <h4>utils.py</h4>
+                    
+                    <div class="tool-result">
+                        <div class="tool-name">Pylint</div>
+                        <div class="tool-output">Line 10: Trailing whitespace (trailing-whitespace)
+Line 15: Trailing whitespace (trailing-whitespace)
+Line 21: Trailing whitespace (trailing-whitespace)
+Line 26: Trailing whitespace (trailing-whitespace)
+Line 29: Trailing whitespace (trailing-whitespace)
+Line 42: Trailing whitespace (trailing-whitespace)
+Line 55: Trailing whitespace (trailing-whitespace)
+Line 59: Trailing whitespace (trailing-whitespace)
+Line 63: Trailing whitespace (trailing-whitespace)
+Line 67: Trailing whitespace (trailing-whitespace)
+Line 112: Trailing whitespace (trailing-whitespace)
+Line 119: Trailing whitespace (trailing-whitespace)
+Line 126: Trailing whitespace (trailing-whitespace)
+Line 129: Trailing whitespace (trailing-whitespace)
+Line 136: Trailing whitespace (trailing-whitespace)
+Line 139: Trailing whitespace (trailing-whitespace)
+Line 141: Trailing whitespace (trailing-whitespace)
+Line 146: Final newline missing (missing-final-newline)
+Line 1: Missing module docstring (missing-module-docstring)
+Line 7: Missing class docstring (missing-class-docstring)
+Line 19: 'subprocess.run' used without explicitly defining the value for 'check'. (subprocess-run-check)
+Line 27: Using open without explicitly specifying an encoding (unspecified-encoding)
+Line 32: Use of eval (eval-used)
+Line 36: Missing class docstring (missing-class-docstring)
+Line 43: Missing function or method docstring (missing-function-docstring)
+Line 56: Missing function or method docstring (missing-function-docstring)
+Line 60: Missing function or method docstring (missing-function-docstring)
+Line 64: Missing function or method docstring (missing-function-docstring)
+Line 77: Using open without explicitly specifying an encoding (unspecified-encoding)
+Line 78: Import outside toplevel (json) (import-outside-toplevel)
+Line 82: Missing function or method docstring (missing-function-docstring)
+Line 86: No exception type(s) specified (bare-except)
+Line 85: Unused variable 'result' (unused-variable)
+Line 90: Missing function or method docstring (missing-function-docstring)
+Line 90: Function name "GetData" doesn't conform to snake_case naming style (invalid-name)
+Line 93: Missing function or method docstring (missing-function-docstring)
+Line 96: Missing function or method docstring (missing-function-docstring)
+Line 96: Function name "CalculateTotal" doesn't conform to snake_case naming style (invalid-name)
+Line 100: Missing function or method docstring (missing-function-docstring)
+Line 103: Missing function or method docstring (missing-function-docstring)
+Line 114: Import outside toplevel (sqlite3) (import-outside-toplevel)
+Line 4: Unused import sys (unused-import)</div>
+                    </div>
+                    
+                    <div class="tool-result">
+                        <div class="tool-name">Flake8</div>
+                        <div class="tool-output">C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:4:1: F401 'sys' imported but unused
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:7:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:10:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:15:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:21:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:26:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:29:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:34:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:42:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:55:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:59:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:63:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:67:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:71:1: E305 expected 2 blank lines after class or function definition, found 1
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:73:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:82:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:85:9: F841 local variable 'result' is assigned to but never used
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:86:5: E722 do not use bare 'except'
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:90:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:93:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:96:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:100:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:103:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:107:1: E302 expected 2 blank lines, found 1
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:112:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:119:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:126:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:129:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:136:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:139:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:141:1: W293 blank line contains whitespace
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:144:1: E305 expected 2 blank lines after class or function definition, found 1
+C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:146:80: W292 no newline at end of file</div>
+                    </div>
+                    
+                    <div class="tool-result">
+                        <div class="tool-name">Ruff</div>
+                        <div class="tool-output">F401 [*] `sys` imported but unused
+ --> tmpsmq4s9cm.py:4:8
+  |
+2 | import pickle
+3 | import subprocess
+4 | import sys
+  |        ^^^
+5 | from pathlib import Path
+  |
+help: Remove unused import: `sys`
+
+F841 Local variable `result` is assigned to but never used
+  --> tmpsmq4s9cm.py:85:9
+   |
+83 |     try:
+84 |         # Too broad exception handling
+85 |         result = 10 / 0
+   |         ^^^^^^
+86 |     except:
+87 |         pass  # Silent failure
+   |
+help: Remove assignment to unused variable `result`
+
+E722 Do not use bare `except`
+  --> tmpsmq4s9cm.py:86:5
+   |
+84 |         # Too broad exception handling
+85 |         result = 10 / 0
+86 |     except:
+   |     ^^^^^^
+87 |         pass  # Silent failure
+   |</div>
+                    </div>
+                    
+                    <div class="tool-result">
+                        <div class="tool-name">Bandit</div>
+                        <div class="tool-output">Run started:2025-10-15 10:08:56.149736
+
+Test results:
+>> Issue: [B403:blacklist] Consider possible security implications associated with pickle module.
+   Severity: Low   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_imports.html#b403-import-pickle
+   Location: C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:2:0
+1	# src/utils.py
+2	import pickle
+3	import subprocess
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:3:0
+2	import pickle
+3	import subprocess
+4	import sys
+
+--------------------------------------------------
+>> Issue: [B301:blacklist] Pickle and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue.
+   Severity: Medium   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b301-pickle
+   Location: C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:14:26
+13	        with open(config_path, 'rb') as f:
+14	            self.config = pickle.load(f)  # Dangerous!
+15	    
+
+--------------------------------------------------
+>> Issue: [B602:subprocess_popen_with_shell_equals_true] subprocess call with shell=True identified, security issue.
+   Severity: High   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b602_subprocess_popen_with_shell_equals_true.html
+   Location: C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:19:17
+18	        # No input validation
+19	        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+20	        return result.stdout
+
+--------------------------------------------------
+>> Issue: [B307:blacklist] Use of possibly insecure function - consider using safer ast.literal_eval.
+   Severity: Medium   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b307-eval
+   Location: C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:32:15
+31	        """Unsafe eval usage"""
+32	        return eval(expression)
+33	
+
+--------------------------------------------------
+>> Issue: [B108:hardcoded_tmp_directory] Probable insecure usage of temp file/directory.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-377 (https://cwe.mitre.org/data/definitions/377.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b108_hardcoded_tmp_directory.html
+   Location: C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:77:14
+76	    # Also modifies external state
+77	    with open("/tmp/state.json", "w") as f:
+78	        import json
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:86:4
+85	        result = 10 / 0
+86	    except:
+87	        pass  # Silent failure
+88	
+
+--------------------------------------------------
+>> Issue: [B108:hardcoded_tmp_directory] Probable insecure usage of temp file/directory.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-377 (https://cwe.mitre.org/data/definitions/377.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b108_hardcoded_tmp_directory.html
+   Location: C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:115:27
+114	    import sqlite3
+115	    conn = sqlite3.connect("/tmp/app.db")
+116	    cursor = conn.cursor()
+
+--------------------------------------------------
+>> Issue: [B608:hardcoded_sql_expressions] Possible SQL injection vector through string-based query construction.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-89 (https://cwe.mitre.org/data/definitions/89.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b608_hardcoded_sql_expressions.html
+   Location: C:\Users\thala\AppData\Local\Temp\tmpsmq4s9cm.py:117:19
+116	    cursor = conn.cursor()
+117	    cursor.execute(f"SELECT * FROM users WHERE id = {request_data['user_id']}")
+118	    user = cursor.fetchone()
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 98
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 3
+		Medium: 5
+		High: 1
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 3
+		High: 6
+Files skipped (0):</div>
+                    </div>
+                    
+                    <div class="tool-result">
+                        <div class="tool-name">MyPy</div>
+                        <div class="tool-output">tmpsmq4s9cm.py:73: error: Function "builtins.any" is not valid as a type  [valid-type]
+tmpsmq4s9cm.py:73: note: Perhaps you meant "typing.Any" instead of "any"?</div>
+                    </div>
+                    
+                </div>
+                
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        
+        
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-lightbulb"></i> Key Recommendations</h2>
+            <div style="background: #f0fdf4; padding: 1.5rem; border-radius: 8px;">
+                <ul style="list-style-position: inside;">
+                    <li style='margin-bottom: 0.5rem;'>Address 14 coding standards issues</li>
+                </ul>
+            </div>
+        </div>
+        
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>Report generated on 2025-10-15 at 15:39:30</p>
+            <p>This report provides automated analysis and recommendations. Manual review is recommended for critical systems.</p>
+        </div>
+    </div>
+
+    <script>
+        // Expandable section functionality
+        document.querySelectorAll('.expandable-header').forEach(header => {
+            header.addEventListener('click', function() {
+                const content = this.nextElementSibling;
+                const icon = this.querySelector('.expandable-icon');
+                
+                content.classList.toggle('expanded');
+                icon.style.transform = content.classList.contains('expanded') ? 'rotate(180deg)' : 'rotate(0deg)';
+            });
+        });
+
+        // Auto-expand sections with errors
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.expandable-section').forEach(section => {
+                const header = section.querySelector('.expandable-header');
+                const content = section.querySelector('.expandable-content');
+                const hasIssues = content.querySelector('.tool-output')?.textContent.includes('Issue:') || 
+                                content.querySelector('.requirement-missing') ||
+                                content.querySelector('.requirement-partial');
+                
+                if (hasIssues) {
+                    content.classList.add('expanded');
+                    const icon = header.querySelector('.expandable-icon');
+                    icon.style.transform = 'rotate(180deg)';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+        
