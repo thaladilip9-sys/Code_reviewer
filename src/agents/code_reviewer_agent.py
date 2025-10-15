@@ -161,6 +161,8 @@ class CodeReviewerAgent:
             }
             return state
         
+        
+        
         print("🔍 Validating requirements implementation...")
         
         try:
@@ -173,6 +175,7 @@ class CodeReviewerAgent:
 
         
             # print("requirement_validation", state)
+            state["requirement_validation"] = result
             
             if "error" not in result:
                 coverage_score = result.get("alignment_analysis", {}).get("overall_alignment_score", 0)
