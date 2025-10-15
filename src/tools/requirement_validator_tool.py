@@ -164,7 +164,7 @@ class RequirementValidator:
             raise e
     
     async def _beautified_streaming_analysis(self, requirements: Dict, files: List[Dict]) -> str:
-        """Perform beautified streaming analysis with character-by-character typing"""
+        """Perform beautified streaming analysis with human-readable output"""
         try:
             prompt = self._create_beautified_prompt(requirements, files)
             
@@ -177,21 +177,17 @@ class RequirementValidator:
             ]
             
             print("   " + "=" * 50)
-            print()  # Add a newline for better formatting
             
             full_response = ""
-            
             async for chunk in self.llm.astream(messages):
+                # time.sleep(0.2)
                 content = chunk.content if hasattr(chunk, 'content') else str(chunk)
+                print(content, end="", flush=True)
                 
-                if content:
-                    # Print character by character with delay
-                    for char in content:
-                        print(char, end="", flush=True)
-                        full_response += char
-                        await asyncio.sleep(0.02)  # 20ms per character
+                full_response += content
+                # time.sleep(0.1)
             
-            print("\n\n   " + "=" * 50)
+            print("\n   " + "=" * 50)
             
             return full_response
             
