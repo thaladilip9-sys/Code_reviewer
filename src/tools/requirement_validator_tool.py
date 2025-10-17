@@ -164,7 +164,7 @@ class RequirementValidator:
             raise e
     
     async def _beautified_streaming_analysis(self, requirements: Dict, files: List[Dict]) -> str:
-        """Perform beautified streaming analysis with human-readable output"""
+        """Perform beautified streaming analysis with time-based batching"""
         try:
             prompt = self._create_beautified_prompt(requirements, files)
             
@@ -177,24 +177,40 @@ class RequirementValidator:
             ]
             
             print("   " + "=" * 50)
+            print()  # Add a newline for better formatting
             
             full_response = ""
-            async for chunk in self.llm.astream(messages):
-                # time.sleep(0.2)
-                content = chunk.content if hasattr(chunk, 'content') else str(chunk)
-                print(content, end="", flush=True)
-                
-                full_response += content
-                # time.sleep(0.1)
+            print_buffer = ""
+            last_print_time = time.time()
+            BATCH_INTERVAL = 1  # Print every 300ms
             
-            print("\n   " + "=" * 50)
+            async for chunk in self.llm.astream(messages):
+                content = chunk.content if hasattr(chunk, 'content') else str(chunk)
+                
+                if content and content not in full_response:
+                    print_buffer += content
+                    full_response += content
+                    
+                    current_time = time.time()
+                    
+                    # Print if enough time has passed or buffer is getting large
+                    if (current_time - last_print_time >= BATCH_INTERVAL) or len(print_buffer) > 50:
+                        print(print_buffer, end="", flush=True)
+                        print_buffer = ""
+                        last_print_time = current_time
+            
+            # Print any remaining content
+            if print_buffer:
+                print(print_buffer, end="", flush=True)
+            
+            print("\n\n   " + "=" * 50)
             
             return full_response
             
         except Exception as e:
             print(f"   ⚠️ Streaming analysis interrupted: {e}")
             return ""
-    
+        
     def _create_json_analysis_prompt(self, requirements: Dict, files: List[Dict]) -> str:
         """Create prompt for structured JSON analysis"""
         return f"""
