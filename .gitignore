@@ -145,7 +145,7 @@ env.bak/
 venv.bak/
 
 mcp-orchestrator/
-
+code_review_reports/
 *.ipynb
 
 # Spyder project settings
