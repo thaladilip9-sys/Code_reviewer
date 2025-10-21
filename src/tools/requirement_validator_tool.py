@@ -181,7 +181,7 @@ class RequirementValidator:
             full_response = ""
             async for chunk in self.llm.astream(messages):
                 content = chunk.content if hasattr(chunk, 'content') else str(chunk)
-                print(content, end="", flush=True)
+                # print(content, end="", flush=True)
                 full_response += content
             
             print("\n   " + "=" * 50)
