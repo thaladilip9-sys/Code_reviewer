@@ -7,9 +7,10 @@ from src.tools.deep_evaluator_tool import DeepEvaluator
 from src.tools.security_analyzer import SecurityQualityAnalyzer
 from src.tools.consolidated_reporter_tool import ConsolidatedReporter
 from src.tools.spec_validator_tool import SpecValidator
+from src.tools.azure_devops_tool import AzureDevOpsTool  # NEW
 from src.services.file_reader_service import FileReader
 import os
-import asyncio,datetime
+import asyncio, datetime
 
 class CodeReviewState(Dict):
     # Input fields
@@ -17,14 +18,17 @@ class CodeReviewState(Dict):
     files: Optional[List[Dict]] = None
     file_paths: Optional[List[str]] = None
     requirements: Optional[Dict] = None
+    azure_config: Optional[Dict] = None  # NEW: Azure DevOps config
+    iteration_path: Optional[str] = None  # NEW: Specific iteration
     
     # Analysis results
     standards_result: Optional[Dict] = None
     requirement_validation: Optional[Dict] = None
     deep_evaluation: Optional[Dict] = None
-    spec_validation:Optional[Dict]=None
+    spec_validation: Optional[Dict] = None
     security_analysis: Optional[Dict] = None
     consolidated_report: Optional[Dict] = None
+    azure_data: Optional[Dict] = None  # NEW: Azure DevOps fetch results
     
     # Output paths
     html_report_path: Optional[str] = None
@@ -50,6 +54,7 @@ class CodeReviewerAgent:
         self.security_analyzer = SecurityQualityAnalyzer()
         self.consolidated_reporter = ConsolidatedReporter(output_dir)
         self.spec_validator = SpecValidator()
+        self.azure_devops_tool = AzureDevOpsTool()  # NEW
         
         # Build workflow
         self.workflow = self._build_workflow()
@@ -58,26 +63,115 @@ class CodeReviewerAgent:
         workflow = StateGraph(CodeReviewState)
         
         # Add all nodes
+        workflow.add_node("fetch_azure_data", self.fetch_azure_data_node)  # NEW: Azure DevOps node
         workflow.add_node("read_files", self.read_files_node)
         workflow.add_node("standards_check", self.standards_check_node)
-        workflow.add_node("spec_validation", self.spec_validation_node)  # NEW
+        workflow.add_node("spec_validation", self.spec_validation_node)
         workflow.add_node("requirement_validation", self.requirement_validation_node)
+        workflow.add_node("deep_evaluation", self.deep_evaluation_node)  # Added back
+        workflow.add_node("security_analysis", self.security_analysis_node)  # Added back
         workflow.add_node("generate_reports", self.generate_reports_node)
         
-        # Define workflow
-        workflow.set_entry_point("read_files")
+        # Define workflow with conditional edges
+        workflow.set_entry_point("fetch_azure_data")
+        
+        # After Azure data fetch, decide whether to continue or skip to end
+        workflow.add_conditional_edges(
+            "fetch_azure_data",
+            self._should_continue_after_azure,
+            {
+                "use_azure_files": "standards_check",  # Skip read_files since we already have files
+                "use_local_files": "read_files",       # Use traditional file reading
+                "skip": "generate_reports"             # Skip due to error
+            }
+        )
+        
         workflow.add_edge("read_files", "standards_check")
-        workflow.add_edge("standards_check", "spec_validation")  # NEW
-        workflow.add_edge("spec_validation", "requirement_validation")  # NEW
-        workflow.add_edge("requirement_validation", "generate_reports")
+        workflow.add_edge("standards_check", "spec_validation")
+        workflow.add_edge("spec_validation", "requirement_validation")
+        workflow.add_edge("requirement_validation", "deep_evaluation")
+        workflow.add_edge("deep_evaluation", "security_analysis")
+        workflow.add_edge("security_analysis", "generate_reports")
         workflow.add_edge("generate_reports", END)
         
         return workflow.compile()
     
+    def _should_continue_after_azure(self, state: CodeReviewState) -> str:
+        """Determine workflow path after Azure data fetch"""
+        if state.get("error"):
+            return "skip"
+        
+        azure_data = state.get("azure_data", {})
+        if azure_data.get("skipped") or azure_data.get("error"):
+            print("⚠️ Azure DevOps fetch skipped, using local files if available")
+            return "use_local_files"
+        
+        # If we have files from Azure, skip the read_files node
+        if state.get("files"):
+            print("✅ Using files from Azure DevOps, skipping file reading")
+            return "use_azure_files"
+        
+        return "use_local_files"
+    
+    async def fetch_azure_data_node(self, state: CodeReviewState) -> CodeReviewState:
+        """Fetch user stories and code from Azure DevOps"""
+        state["current_step"] = "fetch_azure_data"
+        
+        # Skip if no Azure config provided
+        if not state.get("azure_config"):
+            print("ℹ️ No Azure DevOps config provided, skipping Azure fetch")
+            state["azure_data"] = {
+                "skipped": True,
+                "reason": "No Azure DevOps configuration provided"
+            }
+            return state
+        
+        print("🔗 Fetching data from Azure DevOps...")
+        
+        try:
+            azure_tool = self.azure_devops_tool
+            result = azure_tool.func(state)
+            state["azure_data"] = result
+            
+            if "error" not in result and not result.get("skipped"):
+                print(f"✅ Azure DevOps fetch completed: {result.get('user_stories_count', 0)} user stories, {result.get('files_count', 0)} files")
+                
+                # Print language summary
+                code_summary = result.get("code_files_summary", {})
+                languages = code_summary.get("languages", {})
+                if languages:
+                    lang_summary = ", ".join([f"{count} {lang}" for lang, count in languages.items()])
+                    print(f"   📊 Files by language: {lang_summary}")
+                
+                # Print user stories summary
+                user_stories = result.get("user_stories", [])
+                print(f"   📖 User stories with code:")
+                for story in user_stories:
+                    print(f"      • {story['title']} ({story['file_count']} files)")
+                    
+            else:
+                print(f"⚠️ Azure DevOps fetch completed with issues: {result.get('error', 'Unknown error')}")
+            
+        except Exception as e:
+            state["error"] = f"Azure DevOps fetch failed: {str(e)}"
+            state["azure_data"] = {
+                "error": str(e),
+                "skipped": True
+            }
+            print(f"❌ Azure DevOps fetch error: {e}")
+        
+        return state
+    
     async def read_files_node(self, state: CodeReviewState) -> CodeReviewState:
         """Read files from provided paths or direct code"""
         state["current_step"] = "read_files"
-        print("📁 Reading files from paths...")
+        
+        # If we already have files from Azure, skip this node
+        if state.get("files"):
+            print("ℹ️ Files already provided by Azure DevOps, skipping file reading")
+            return state
+            
+        print("📁 Reading files from local paths...")
         
         try:
             if state.get("file_paths"):
@@ -118,6 +212,29 @@ class CodeReviewerAgent:
         
         return state
     
+    async def standards_check_node(self, state: CodeReviewState) -> CodeReviewState:
+        """Run code standards analysis"""
+        if state.get("error"):
+            return state
+        
+        state["current_step"] = "standards_check"
+        print("📏 Running code standards analysis...")
+        
+        try:
+            standards_tool = self.standards_checker.get_tool()
+            result = standards_tool.func(state)
+            state["standards_result"] = result
+            
+            # Calculate standards summary
+            standards_summary = self._calculate_standards_summary(result)
+            print(f"✅ Standards analysis completed: {standards_summary}")
+            
+        except Exception as e:
+            state["error"] = f"Standards analysis failed: {str(e)}"
+            print(f"❌ Standards analysis error: {e}")
+        
+        return state
+    
     async def spec_validation_node(self, state: CodeReviewState) -> CodeReviewState:
         """Validate code against YAML specification document"""
         if state.get("error"):
@@ -134,9 +251,6 @@ class CodeReviewerAgent:
             if "error" not in result:
                 overall_score = result.get("overall_metrics", {}).get("overall_compliance_score", 0)
                 print(f"✅ YAML specification validation completed: Score {overall_score}%")
-                import json
-                with open("./yaml_spec_output.json",'w') as f:
-                    json.dump(result,f,indent=4) 
                 
                 # Print category summary
                 for category, results in result.get("validation_steps", {}).items():
@@ -151,30 +265,6 @@ class CodeReviewerAgent:
         
         return state
     
-    async def standards_check_node(self, state: CodeReviewState) -> CodeReviewState:
-        """Run code standards analysis"""
-        if state.get("error"):
-            return state
-        
-        state["current_step"] = "standards_check"
-        print("📏 Running code standards analysis...")
-        
-        try:
-            standards_tool = self.standards_checker.get_tool()
-            result = standards_tool.func(state)
-            state["standards_result"] = result
-            
-            
-            # Calculate standards summary
-            standards_summary = self._calculate_standards_summary(result)
-            print(f"✅ Standards analysis completed: {standards_summary}")
-            
-        except Exception as e:
-            state["error"] = f"Standards analysis failed: {str(e)}"
-            print(f"❌ Standards analysis error: {e}")
-        
-        return state
-    
     async def requirement_validation_node(self, state: CodeReviewState) -> CodeReviewState:
         """Validate requirements implementation"""
         if state.get("error"):
@@ -182,10 +272,6 @@ class CodeReviewerAgent:
         
         state["current_step"] = "requirement_validation"
 
-        # import json
-        # with open("state.json",'w') as f:
-        #     json.dump(state,f,indent=4)
-        
         # Skip if no requirements provided
         if not state.get("requirements"):
             print("ℹ️ No requirements provided, skipping requirement validation")
@@ -195,20 +281,11 @@ class CodeReviewerAgent:
             }
             return state
         
-        
-        
         print("🔍 Validating requirements implementation...")
         
         try:
             requirement_tool = self.requirement_validator.get_tool()
             result = requirement_tool.func(state)
-
-            # import json
-            # with open("result.json",'w') as f:
-            #     json.dump(result,f,indent=4)
-
-        
-            # print("requirement_validation", state)
             state["requirement_validation"] = result
             
             if "error" not in result:
@@ -256,7 +333,8 @@ class CodeReviewerAgent:
             state["error"] = f"Deep evaluation failed: {str(e)}"
             print(f"❌ Deep evaluation error: {e}")
         
-        return state    
+        return state
+    
     async def security_analysis_node(self, state: CodeReviewState) -> CodeReviewState:
         """Perform security and quality analysis"""
         if state.get("error"):
@@ -366,6 +444,13 @@ class CodeReviewerAgent:
         print("🎉 CODE REVIEW COMPLETED SUCCESSFULLY!")
         print("="*60)
         
+        # Azure DevOps summary
+        if state.get("azure_data") and state["azure_data"].get("success"):
+            azure_data = state["azure_data"]
+            print(f"🔗 Azure DevOps:")
+            print(f"   User Stories: {azure_data.get('user_stories_count', 0)}")
+            print(f"   Code Files: {azure_data.get('files_count', 0)}")
+        
         # Standards summary
         if state.get("standards_result"):
             standards_summary = self._calculate_standards_summary(state["standards_result"])
@@ -459,6 +544,26 @@ class CodeReviewerAgent:
         final_state = await self.workflow.ainvoke(initial_state)
         return dict(final_state)
     
+    async def review_azure_devops(self, azure_config: Dict, iteration_path: Optional[str] = None) -> Dict:
+        """
+        Review code from Azure DevOps user stories and commits.
+        
+        Args:
+            azure_config: Azure DevOps configuration (organization, project, personal_access_token)
+            iteration_path: Optional specific iteration path
+            
+        Returns:
+            Complete analysis results
+        """
+        initial_state = CodeReviewState(
+            azure_config=azure_config,
+            iteration_path=iteration_path
+        )
+        
+        print(f"🚀 Starting Azure DevOps code review...")
+        final_state = await self.workflow.ainvoke(initial_state)
+        return dict(final_state)
+    
     async def review_with_custom_requirements(self, file_paths: List[str], 
                                             user_stories: List[str],
                                             acceptance_criteria: List[str]) -> Dict:
@@ -476,7 +581,7 @@ class CodeReviewerAgent:
         requirements = {
             "user_stories": user_stories,
             "acceptance_criteria": acceptance_criteria,
-            "timestamp": str(datetime.now())
+            "timestamp": str(datetime.datetime.now())
         }
         
         return await self.review_files(file_paths, requirements)
@@ -493,4 +598,3 @@ async def create_code_review_agent(output_dir: str = "code_review_reports") -> C
         Configured CodeReviewerAgent instance
     """
     return CodeReviewerAgent(output_dir)
-
