@@ -6,6 +6,7 @@ from src.tools.requirement_validator_tool import RequirementValidator
 from src.tools.deep_evaluator_tool import DeepEvaluator
 from src.tools.security_analyzer import SecurityQualityAnalyzer
 from src.tools.consolidated_reporter_tool import ConsolidatedReporter
+from src.tools.spec_validator_tool import SpecValidator
 from src.services.file_reader_service import FileReader
 import os
 import asyncio,datetime
@@ -21,6 +22,7 @@ class CodeReviewState(Dict):
     standards_result: Optional[Dict] = None
     requirement_validation: Optional[Dict] = None
     deep_evaluation: Optional[Dict] = None
+    spec_validation:Optional[Dict]=None
     security_analysis: Optional[Dict] = None
     consolidated_report: Optional[Dict] = None
     
@@ -47,27 +49,26 @@ class CodeReviewerAgent:
         self.deep_evaluator = DeepEvaluator()
         self.security_analyzer = SecurityQualityAnalyzer()
         self.consolidated_reporter = ConsolidatedReporter(output_dir)
+        self.spec_validator = SpecValidator()
         
         # Build workflow
         self.workflow = self._build_workflow()
     
     def _build_workflow(self) -> StateGraph:
-        """Build comprehensive code review workflow"""
         workflow = StateGraph(CodeReviewState)
         
         # Add all nodes
         workflow.add_node("read_files", self.read_files_node)
         workflow.add_node("standards_check", self.standards_check_node)
+        workflow.add_node("spec_validation", self.spec_validation_node)  # NEW
         workflow.add_node("requirement_validation", self.requirement_validation_node)
-        # workflow.add_node("deep_evaluation", self.deep_evaluation_node)
         workflow.add_node("generate_reports", self.generate_reports_node)
         
         # Define workflow
         workflow.set_entry_point("read_files")
-        
-        # Main sequential flow
         workflow.add_edge("read_files", "standards_check")
-        workflow.add_edge("standards_check", "requirement_validation")
+        workflow.add_edge("standards_check", "spec_validation")  # NEW
+        workflow.add_edge("spec_validation", "requirement_validation")  # NEW
         workflow.add_edge("requirement_validation", "generate_reports")
         workflow.add_edge("generate_reports", END)
         
@@ -114,6 +115,39 @@ class CodeReviewerAgent:
         except Exception as e:
             state["error"] = f"Error reading files: {str(e)}"
             print(f"❌ File reading error: {e}")
+        
+        return state
+    
+    async def spec_validation_node(self, state: CodeReviewState) -> CodeReviewState:
+        """Validate code against YAML specification document"""
+        if state.get("error"):
+            return state
+        
+        state["current_step"] = "spec_validation"
+        print("📋 Running YAML specification validation...")
+        
+        try:
+            spec_tool = self.spec_validator.get_tool()
+            result = spec_tool.func(state)
+            state["spec_validation"] = result
+            
+            if "error" not in result:
+                overall_score = result.get("overall_metrics", {}).get("overall_compliance_score", 0)
+                print(f"✅ YAML specification validation completed: Score {overall_score}%")
+                import json
+                with open("./yaml_spec_output.json",'w') as f:
+                    json.dump(result,f,indent=4) 
+                
+                # Print category summary
+                for category, results in result.get("validation_steps", {}).items():
+                    rules_applied = results.get("yaml_rules_applied", [])
+                    print(f"   📊 {category}: {len(rules_applied)} rules applied")
+            else:
+                print(f"⚠️ Specification validation completed with issues")
+            
+        except Exception as e:
+            state["error"] = f"Specification validation failed: {str(e)}"
+            print(f"❌ Specification validation error: {e}")
         
         return state
     

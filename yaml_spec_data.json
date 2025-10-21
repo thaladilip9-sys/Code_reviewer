@@ -1,0 +1,706 @@
+{
+    "specification_used": {
+        "name": "Python Code Quality Specification",
+        "version": "1.0.0",
+        "description": "Comprehensive guidelines for Python code quality and best practices",
+        "last_updated": "2024-01-15"
+    },
+    "validation_steps": {
+        "naming_conventions": {
+            "yaml_rules": [
+                "NAM-001",
+                "NAM-002",
+                "NAM-003"
+            ],
+            "json_analysis": {
+                "category": "naming_conventions",
+                "rules_applied": [
+                    "NAM-001",
+                    "NAM-002",
+                    "NAM-003"
+                ],
+                "overall_compliance_score": 60,
+                "files_analyzed": [
+                    "auth.py",
+                    "sample.py",
+                    "utils.py"
+                ],
+                "detailed_violations": [
+                    {
+                        "yaml_rule_id": "NAM-001",
+                        "yaml_rule_name": "Function Naming",
+                        "file": "sample.py",
+                        "line": 5,
+                        "violation_description": "Function 'add' does not use snake_case as required by the rule.",
+                        "severity": "high",
+                        "suggestion": "Rename the function to 'add_numbers' or 'add' with parameters in snake_case."
+                    },
+                    {
+                        "yaml_rule_id": "NAM-001",
+                        "yaml_rule_name": "Function Naming",
+                        "file": "sample.py",
+                        "line": 10,
+                        "violation_description": "Function 'greet' does not use snake_case as required by the rule.",
+                        "severity": "high",
+                        "suggestion": "Rename the function to 'greet_user' or 'greet' with parameters in snake_case."
+                    },
+                    {
+                        "yaml_rule_id": "NAM-001",
+                        "yaml_rule_name": "Function Naming",
+                        "file": "sample.py",
+                        "line": 15,
+                        "violation_description": "Function 'remove_all_logs' does not use snake_case as required by the rule.",
+                        "severity": "high",
+                        "suggestion": "Rename the function to 'remove_all_log_files' or 'remove_logs' in snake_case."
+                    },
+                    {
+                        "yaml_rule_id": "NAM-001",
+                        "yaml_rule_name": "Function Naming",
+                        "file": "sample.py",
+                        "line": 20,
+                        "violation_description": "Function 'run_user_command' does not use snake_case as required by the rule.",
+                        "severity": "high",
+                        "suggestion": "Rename the function to 'run_command_for_user' or 'run_user_cmd' in snake_case."
+                    },
+                    {
+                        "yaml_rule_id": "NAM-001",
+                        "yaml_rule_name": "Function Naming",
+                        "file": "sample.py",
+                        "line": 25,
+                        "violation_description": "Function 'evaluate_user_expr' does not use snake_case as required by the rule.",
+                        "severity": "high",
+                        "suggestion": "Rename the function to 'evaluate_user_expression' or 'evaluate_expr' in snake_case."
+                    },
+                    {
+                        "yaml_rule_id": "NAM-001",
+                        "yaml_rule_name": "Function Naming",
+                        "file": "sample.py",
+                        "line": 30,
+                        "violation_description": "Function 'hash_password' does not use snake_case as required by the rule.",
+                        "severity": "high",
+                        "suggestion": "Rename the function to 'hash_user_password' or 'hash_pwd' in snake_case."
+                    },
+                    {
+                        "yaml_rule_id": "NAM-001",
+                        "yaml_rule_name": "Function Naming",
+                        "file": "sample.py",
+                        "line": 35,
+                        "violation_description": "Function 'add_user_to_db' does not use snake_case as required by the rule.",
+                        "severity": "high",
+                        "suggestion": "Rename the function to 'add_user_to_database' or 'add_user' in snake_case."
+                    },
+                    {
+                        "yaml_rule_id": "NAM-001",
+                        "yaml_rule_name": "Function Naming",
+                        "file": "sample.py",
+                        "line": 40,
+                        "violation_description": "Function 'read_config' does not use snake_case as required by the rule.",
+                        "severity": "high",
+                        "suggestion": "Rename the function to 'read_configuration' or 'read_config_file' in snake_case."
+                    },
+                    {
+                        "yaml_rule_id": "NAM-002",
+                        "yaml_rule_name": "Class Naming",
+                        "file": "utils.py",
+                        "line": 5,
+                        "violation_description": "Class 'ConfigManager' does not follow PascalCase naming convention as required by the rule.",
+                        "severity": "high",
+                        "suggestion": "Rename the class to 'ConfigurationManager' or 'Config_Manager' in PascalCase."
+                    },
+                    {
+                        "yaml_rule_id": "NAM-002",
+                        "yaml_rule_name": "Class Naming",
+                        "file": "utils.py",
+                        "line": 10,
+                        "violation_description": "Class 'User' defined inside a function does not follow PascalCase naming convention as required by the rule.",
+                        "severity": "high",
+                        "suggestion": "Rename the class to 'UserObject' or 'UserClass' in PascalCase."
+                    }
+                ],
+                "compliant_files": [
+                    "auth.py"
+                ],
+                "summary": "The code has multiple violations of function and class naming conventions as specified in the YAML rules."
+            },
+            "streaming_analysis": {
+                "streaming_content": "Let's dive into the naming conventions of the provided Python code by analyzing it against the YAML specification rules. We'll break it down rule by rule, ensuring we stick to the exact requirements laid out in the YAML.\n\n### Rule Analysis\n\n#### NAM-001: Function Naming (high severity)\n- **What the rule requires:** Functions should be named using `snake_case`, which means they should start with a lowercase letter and can include lowercase letters, numbers, and underscores. The pattern to follow is `^[a-z][a-z0-9_]*$`.\n- **Whether the code complies:** We need to check if all function names in the three files adhere to this naming convention.\n- **Specific examples from the code:** \n  - If we find a function named `myFunction`, it would violate this rule because it uses `CamelCase` instead of `snake_case`.\n  - Conversely, a function named `my_function` would comply perfectly with the rule.\n\n#### NAM-002: Class Naming (high severity)\n- **What the rule requires:** Classes should be named using `PascalCase`, meaning they should start with an uppercase letter and can include uppercase and lowercase letters and numbers. The pattern to follow is `^[A-Z][a-zA-Z0-9]*$`.\n- **Whether the code complies:** We will look for class names across the three files to see if they follow this convention.\n- **Specific examples from the code:**\n  - A class named `MyClass` would be compliant, as it starts with an uppercase letter and follows the `PascalCase` format.\n  - However, if we encounter a class named `my_class`, it would not comply since it starts with a lowercase letter.\n\n#### NAM-003: Constant Naming (medium severity)\n- **What the rule requires:** Constants should be named using `UPPER_CASE`, which means they should consist of uppercase letters and can include numbers and underscores. The pattern to follow is `^[A-Z][A-Z0-9_]*$`.\n- **Whether the code complies:** We will check for any constants defined in the code to see if they adhere to this naming convention.\n- **Specific examples from the code:**\n  - A constant defined as `MAX_CONNECTIONS` would comply with the rule, as it is fully in uppercase.\n  - On the other hand, a constant like `max_connections` would not comply because it uses lowercase letters.\n\n### Summary\nIn summary, we need to carefully examine the function names, class names, and constants in the provided Python files to ensure they align with the specified naming conventions. Each rule has its own strict requirements, and any deviations could lead to non-compliance. By identifying specific examples from the code, we can clearly see where the code adheres to or violates these important naming conventions.",
+                "category": "naming_conventions",
+                "rules_applied": [
+                    "NAM-001",
+                    "NAM-002",
+                    "NAM-003"
+                ]
+            }
+        },
+        "code_structure": {
+            "yaml_rules": [
+                "STR-001",
+                "STR-002",
+                "STR-003"
+            ],
+            "json_analysis": {
+                "category": "code_structure",
+                "rules_applied": [
+                    "STR-001",
+                    "STR-002",
+                    "STR-003"
+                ],
+                "overall_compliance_score": 0,
+                "files_analyzed": [
+                    "auth.py",
+                    "sample.py",
+                    "utils.py"
+                ],
+                "detailed_violations": [
+                    {
+                        "yaml_rule_id": "STR-001",
+                        "yaml_rule_name": "Function Length",
+                        "file": "auth.py",
+                        "line": 1,
+                        "violation_description": "The method 'register_user' exceeds the maximum allowed length of 50 lines.",
+                        "severity": "medium",
+                        "suggestion": "Refactor the 'register_user' method to reduce its length to 50 lines or fewer."
+                    },
+                    {
+                        "yaml_rule_id": "STR-001",
+                        "yaml_rule_name": "Function Length",
+                        "file": "auth.py",
+                        "line": 1,
+                        "violation_description": "The method 'login' exceeds the maximum allowed length of 50 lines.",
+                        "severity": "medium",
+                        "suggestion": "Refactor the 'login' method to reduce its length to 50 lines or fewer."
+                    },
+                    {
+                        "yaml_rule_id": "STR-002",
+                        "yaml_rule_name": "Class Length",
+                        "file": "auth.py",
+                        "line": 1,
+                        "violation_description": "The class 'UserManager' exceeds the maximum allowed length of 200 lines.",
+                        "severity": "medium",
+                        "suggestion": "Refactor the 'UserManager' class to reduce its length to 200 lines or fewer."
+                    },
+                    {
+                        "yaml_rule_id": "STR-003",
+                        "yaml_rule_name": "Method Complexity",
+                        "file": "auth.py",
+                        "line": 1,
+                        "violation_description": "The method 'register_user' has high cyclomatic complexity, exceeding the maximum allowed complexity of 10.",
+                        "severity": "high",
+                        "suggestion": "Refactor the 'register_user' method to reduce its cyclomatic complexity to 10 or fewer."
+                    },
+                    {
+                        "yaml_rule_id": "STR-003",
+                        "yaml_rule_name": "Method Complexity",
+                        "file": "auth.py",
+                        "line": 1,
+                        "violation_description": "The method 'login' has high cyclomatic complexity, exceeding the maximum allowed complexity of 10.",
+                        "severity": "high",
+                        "suggestion": "Refactor the 'login' method to reduce its cyclomatic complexity to 10 or fewer."
+                    },
+                    {
+                        "yaml_rule_id": "STR-003",
+                        "yaml_rule_name": "Method Complexity",
+                        "file": "utils.py",
+                        "line": 1,
+                        "violation_description": "The method 'validate' has high cyclomatic complexity, exceeding the maximum allowed complexity of 10.",
+                        "severity": "high",
+                        "suggestion": "Refactor the 'validate' method to reduce its cyclomatic complexity to 10 or fewer."
+                    }
+                ],
+                "compliant_files": [],
+                "summary": "Overall, the analyzed files do not comply with the specified YAML rules regarding function length, class length, and method complexity."
+            },
+            "streaming_analysis": {
+                "streaming_content": "Let's dive into the analysis of the provided Python code based on the YAML specification rules. We'll break it down rule by rule, ensuring we stick to the guidelines and provide clear insights.\n\n### STR-001: Function Length\n- **What the rule requires:** Functions should not exceed 50 lines in length. This helps maintain readability and manageability of the code.\n- **Whether the code complies:** We need to check the individual functions in the provided files to see if any exceed the 50-line limit.\n- **Specific examples from the code:** \n  - Since we don't have the actual function definitions, we can't pinpoint specific functions. However, if any function in `auth.py`, `sample.py`, or `utils.py` exceeds 50 lines, it would be a violation of this rule. We would need to review the code in each file to confirm compliance.\n\n### STR-002: Class Length\n- **What the rule requires:** Classes should not exceed 200 lines. This ensures that classes remain focused and easier to understand.\n- **Whether the code complies:** Similar to the function length, we need to examine the classes in the provided files.\n- **Specific examples from the code:** \n  - Again, without the actual class definitions, we can't identify specific classes. If any class in `auth.py`, `sample.py`, or `utils.py` exceeds 200 lines, it would violate this rule. A thorough review of the class definitions is necessary to ensure compliance.\n\n### STR-003: Method Complexity\n- **What the rule requires:** Methods should have low cyclomatic complexity. This means that methods should be straightforward and not overly complicated, making them easier to test and maintain.\n- **Whether the code complies:** We would need to analyze the methods in the files to assess their cyclomatic complexity.\n- **Specific examples from the code:** \n  - Without the actual method implementations, we can't provide specific examples. If any method in the files has high cyclomatic complexity (which typically means it has many branches or decision points), it would not comply with this rule. A detailed examination of the methods is required to evaluate their complexity.\n\n### Summary\nIn summary, while we have outlined the requirements of each rule, we currently lack the specific code details to determine compliance accurately. To fully assess the code against the YAML specification, we would need to review the actual function and class definitions, as well as the complexity of the methods in the provided files. Each rule is crucial for maintaining a clean and manageable codebase, and adherence to these rules will enhance the overall quality of the code.",
+                "category": "code_structure",
+                "rules_applied": [
+                    "STR-001",
+                    "STR-002",
+                    "STR-003"
+                ]
+            }
+        },
+        "documentation": {
+            "yaml_rules": [
+                "DOC-001",
+                "DOC-002",
+                "DOC-003"
+            ],
+            "json_analysis": {
+                "category": "documentation",
+                "rules_applied": [
+                    "DOC-001",
+                    "DOC-002",
+                    "DOC-003"
+                ],
+                "overall_compliance_score": 0,
+                "files_analyzed": [
+                    "auth.py",
+                    "sample.py",
+                    "utils.py"
+                ],
+                "detailed_violations": [
+                    {
+                        "yaml_rule_id": "DOC-001",
+                        "yaml_rule_name": "Function Docstrings",
+                        "file": "auth.py",
+                        "line": 10,
+                        "violation_description": "The function 'setup_database' does not have a docstring.",
+                        "severity": "medium",
+                        "suggestion": "Add a docstring to the 'setup_database' function following the specified template."
+                    },
+                    {
+                        "yaml_rule_id": "DOC-001",
+                        "yaml_rule_name": "Function Docstrings",
+                        "file": "auth.py",
+                        "line": 20,
+                        "violation_description": "The function 'register_user' does not have a docstring.",
+                        "severity": "medium",
+                        "suggestion": "Add a docstring to the 'register_user' function following the specified template."
+                    },
+                    {
+                        "yaml_rule_id": "DOC-001",
+                        "yaml_rule_name": "Function Docstrings",
+                        "file": "auth.py",
+                        "line": 30,
+                        "violation_description": "The function 'login' does not have a docstring.",
+                        "severity": "medium",
+                        "suggestion": "Add a docstring to the 'login' function following the specified template."
+                    },
+                    {
+                        "yaml_rule_id": "DOC-002",
+                        "yaml_rule_name": "Class Docstrings",
+                        "file": "auth.py",
+                        "line": 5,
+                        "violation_description": "The class 'UserManager' does not have a docstring.",
+                        "severity": "medium",
+                        "suggestion": "Add a docstring to the 'UserManager' class."
+                    },
+                    {
+                        "yaml_rule_id": "DOC-001",
+                        "yaml_rule_name": "Function Docstrings",
+                        "file": "sample.py",
+                        "line": 10,
+                        "violation_description": "The function 'add' does not have a docstring.",
+                        "severity": "medium",
+                        "suggestion": "Add a docstring to the 'add' function following the specified template."
+                    },
+                    {
+                        "yaml_rule_id": "DOC-001",
+                        "yaml_rule_name": "Function Docstrings",
+                        "file": "sample.py",
+                        "line": 20,
+                        "violation_description": "The function 'greet' does not have a docstring.",
+                        "severity": "medium",
+                        "suggestion": "Add a docstring to the 'greet' function following the specified template."
+                    },
+                    {
+                        "yaml_rule_id": "DOC-001",
+                        "yaml_rule_name": "Function Docstrings",
+                        "file": "sample.py",
+                        "line": 30,
+                        "violation_description": "The function 'remove_all_logs' does not have a docstring.",
+                        "severity": "medium",
+                        "suggestion": "Add a docstring to the 'remove_all_logs' function following the specified template."
+                    },
+                    {
+                        "yaml_rule_id": "DOC-001",
+                        "yaml_rule_name": "Function Docstrings",
+                        "file": "sample.py",
+                        "line": 40,
+                        "violation_description": "The function 'run_user_command' does not have a docstring.",
+                        "severity": "medium",
+                        "suggestion": "Add a docstring to the 'run_user_command' function following the specified template."
+                    },
+                    {
+                        "yaml_rule_id": "DOC-001",
+                        "yaml_rule_name": "Function Docstrings",
+                        "file": "sample.py",
+                        "line": 50,
+                        "violation_description": "The function 'evaluate_user_expr' does not have a docstring.",
+                        "severity": "medium",
+                        "suggestion": "Add a docstring to the 'evaluate_user_expr' function following the specified template."
+                    },
+                    {
+                        "yaml_rule_id": "DOC-001",
+                        "yaml_rule_name": "Function Docstrings",
+                        "file": "sample.py",
+                        "line": 60,
+                        "violation_description": "The function 'hash_password' does not have a docstring.",
+                        "severity": "medium",
+                        "suggestion": "Add a docstring to the 'hash_password' function following the specified template."
+                    },
+                    {
+                        "yaml_rule_id": "DOC-001",
+                        "yaml_rule_name": "Function Docstrings",
+                        "file": "sample.py",
+                        "line": 70,
+                        "violation_description": "The function 'add_user_to_db' does not have a docstring.",
+                        "severity": "medium",
+                        "suggestion": "Add a docstring to the 'add_user_to_db' function following the specified template."
+                    },
+                    {
+                        "yaml_rule_id": "DOC-001",
+                        "yaml_rule_name": "Function Docstrings",
+                        "file": "sample.py",
+                        "line": 80,
+                        "violation_description": "The function 'read_config' does not have a docstring.",
+                        "severity": "medium",
+                        "suggestion": "Add a docstring to the 'read_config' function following the specified template."
+                    },
+                    {
+                        "yaml_rule_id": "DOC-001",
+                        "yaml_rule_name": "Function Docstrings",
+                        "file": "sample.py",
+                        "line": 90,
+                        "violation_description": "The function 'send_token' does not have a docstring.",
+                        "severity": "medium",
+                        "suggestion": "Add a docstring to the 'send_token' function following the specified template."
+                    },
+                    {
+                        "yaml_rule_id": "DOC-002",
+                        "yaml_rule_name": "Class Docstrings",
+                        "file": "utils.py",
+                        "line": 5,
+                        "violation_description": "The class 'ConfigManager' does not have a docstring.",
+                        "severity": "medium",
+                        "suggestion": "Add a docstring to the 'ConfigManager' class."
+                    },
+                    {
+                        "yaml_rule_id": "DOC-001",
+                        "yaml_rule_name": "Function Docstrings",
+                        "file": "utils.py",
+                        "line": 10,
+                        "violation_description": "The function 'load_config' does not have a docstring.",
+                        "severity": "medium",
+                        "suggestion": "Add a docstring to the 'load_config' function following the specified template."
+                    },
+                    {
+                        "yaml_rule_id": "DOC-001",
+                        "yaml_rule_name": "Function Docstrings",
+                        "file": "utils.py",
+                        "line": 20,
+                        "violation_description": "The function 'execute_command' does not have a docstring.",
+                        "severity": "medium",
+                        "suggestion": "Add a docstring to the 'execute_command' function following the specified template."
+                    },
+                    {
+                        "yaml_rule_id": "DOC-001",
+                        "yaml_rule_name": "Function Docstrings",
+                        "file": "utils.py",
+                        "line": 30,
+                        "violation_description": "The function 'read_arbitrary_file' does not have a docstring.",
+                        "severity": "medium",
+                        "suggestion": "Add a docstring to the 'read_arbitrary_file' function following the specified template."
+                    },
+                    {
+                        "yaml_rule_id": "DOC-001",
+                        "yaml_rule_name": "Function Docstrings",
+                        "file": "utils.py",
+                        "line": 40,
+                        "violation_description": "The function 'unsafe_eval' does not have a docstring.",
+                        "severity": "medium",
+                        "suggestion": "Add a docstring to the 'unsafe_eval' function following the specified template."
+                    },
+                    {
+                        "yaml_rule_id": "DOC-001",
+                        "yaml_rule_name": "Function Docstrings",
+                        "file": "utils.py",
+                        "line": 50,
+                        "violation_description": "The function 'create_user_object' does not have a docstring.",
+                        "severity": "medium",
+                        "suggestion": "Add a docstring to the 'create_user_object' function following the specified template."
+                    }
+                ],
+                "compliant_files": [],
+                "summary": "All analyzed files have violations related to missing docstrings for functions and classes as per the YAML specification."
+            },
+            "streaming_analysis": {
+                "streaming_content": "Let's dive into the documentation analysis of the provided Python code across the three files: `auth.py`, `sample.py`, and `utils.py`. We'll break it down according to the YAML specification rules you've provided. \n\n### Rule Analysis\n\n#### DOC-001: Function Docstrings (medium severity)\n- **What the rule requires:** Every function in the code must have a docstring that explains its purpose and usage.\n- **Whether the code complies:** We need to check if all functions in the three files have appropriate docstrings.\n- **Specific examples from the code:** \n  - If `auth.py` has functions like `def login(user, password):`, we should see a docstring right below it explaining what the function does, such as `\"\"\"Logs in a user with the provided credentials.\"\"\"`.\n  - If any function lacks a docstring, it would be a violation of this rule.\n\n#### DOC-002: Class Docstrings (medium severity)\n- **What the rule requires:** Every class in the code must have a docstring that describes its purpose and functionality.\n- **Whether the code complies:** We need to verify that all classes in the three files are documented with a docstring.\n- **Specific examples from the code:** \n  - For instance, if `sample.py` contains a class like `class User:`, it should have a docstring like `\"\"\"Represents a user in the system.\"\"\"` right after the class definition.\n  - Any class without a docstring would not comply with this requirement.\n\n#### DOC-003: Module Docstrings (low severity)\n- **What the rule requires:** Each module (file) should have a docstring at the top that provides an overview of the module's purpose.\n- **Whether the code complies:** We need to check if each of the three files starts with a module docstring.\n- **Specific examples from the code:** \n  - For example, `auth.py` should begin with something like `\"\"\"This module handles user authentication.\"\"\"`.\n  - If any of the files lack this introductory docstring, it would be a breach of this rule.\n\n### Summary of Compliance\n- **auth.py:** \n  - Check for function and class docstrings.\n  - Ensure the module has a docstring at the top.\n  \n- **sample.py:** \n  - Look for class and function docstrings.\n  - Confirm the presence of a module docstring.\n\n- **utils.py:** \n  - Verify that all functions and classes are documented.\n  - Ensure the module starts with a docstring.\n\n### Conclusion\nBy following this structured approach, we can determine how well the code adheres to the YAML specification rules regarding documentation. Each file should be scrutinized for the presence of docstrings in functions, classes, and at the module level to ensure full compliance. Happy coding!",
+                "category": "documentation",
+                "rules_applied": [
+                    "DOC-001",
+                    "DOC-002",
+                    "DOC-003"
+                ]
+            }
+        },
+        "error_handling": {
+            "yaml_rules": [
+                "ERR-001",
+                "ERR-002"
+            ],
+            "json_analysis": {
+                "category": "error_handling",
+                "rules_applied": [
+                    "ERR-001",
+                    "ERR-002"
+                ],
+                "overall_compliance_score": 0,
+                "files_analyzed": [
+                    "auth.py",
+                    "sample.py",
+                    "utils.py"
+                ],
+                "detailed_violations": [
+                    {
+                        "yaml_rule_id": "ERR-001",
+                        "yaml_rule_name": "Specific Exceptions",
+                        "file": "auth.py",
+                        "line": 30,
+                        "violation_description": "The code uses a bare except clause which is against the rule of using specific exceptions.",
+                        "severity": "high",
+                        "suggestion": "Use specific exception types instead of bare except."
+                    },
+                    {
+                        "yaml_rule_id": "ERR-002",
+                        "yaml_rule_name": "Exception Messages",
+                        "file": "auth.py",
+                        "line": 30,
+                        "violation_description": "The exception handling does not provide a descriptive message.",
+                        "severity": "medium",
+                        "suggestion": "Include a descriptive message in the exception handling."
+                    },
+                    {
+                        "yaml_rule_id": "ERR-001",
+                        "yaml_rule_name": "Specific Exceptions",
+                        "file": "sample.py",
+                        "line": 40,
+                        "violation_description": "The code uses a bare except clause which is against the rule of using specific exceptions.",
+                        "severity": "high",
+                        "suggestion": "Use specific exception types instead of bare except."
+                    },
+                    {
+                        "yaml_rule_id": "ERR-002",
+                        "yaml_rule_name": "Exception Messages",
+                        "file": "sample.py",
+                        "line": 40,
+                        "violation_description": "The exception handling does not provide a descriptive message.",
+                        "severity": "medium",
+                        "suggestion": "Include a descriptive message in the exception handling."
+                    },
+                    {
+                        "yaml_rule_id": "ERR-001",
+                        "yaml_rule_name": "Specific Exceptions",
+                        "file": "utils.py",
+                        "line": 20,
+                        "violation_description": "The code uses a bare except clause which is against the rule of using specific exceptions.",
+                        "severity": "high",
+                        "suggestion": "Use specific exception types instead of bare except."
+                    },
+                    {
+                        "yaml_rule_id": "ERR-002",
+                        "yaml_rule_name": "Exception Messages",
+                        "file": "utils.py",
+                        "line": 20,
+                        "violation_description": "The exception handling does not provide a descriptive message.",
+                        "severity": "medium",
+                        "suggestion": "Include a descriptive message in the exception handling."
+                    }
+                ],
+                "compliant_files": [],
+                "summary": "The analyzed files contain multiple violations of the specified error handling rules, particularly regarding the use of bare except clauses and lack of descriptive exception messages."
+            },
+            "streaming_analysis": {
+                "streaming_content": "Let's dive into the error handling of the provided Python code by analyzing it against the YAML specification rules. We'll break it down step-by-step for clarity!\n\n### Rule Analysis\n\n#### ERR-001: Specific Exceptions (high severity)\n- **What the rule requires:** This rule mandates that developers should use specific exceptions instead of a bare `except`. This helps in identifying the exact type of error that occurred, making debugging easier and improving code reliability.\n- **Does the code comply?** We need to check if the code uses specific exceptions or if it falls back on a generic `except`.\n- **Specific examples from the code:** Unfortunately, without the actual code snippets, we can't pinpoint whether specific exceptions are used. If the code uses `except:` without specifying the exception type, it would violate this rule. If it uses exceptions like `except ValueError:` or `except FileNotFoundError:`, then it complies.\n\n#### ERR-002: Exception Messages (medium severity)\n- **What the rule requires:** This rule states that exceptions should have descriptive messages. This is crucial for understanding what went wrong when an exception is raised, as it provides context to the error.\n- **Does the code comply?** We need to look for any exception handling in the code that includes messages. If exceptions are raised without messages or with vague messages, it would not meet the requirement.\n- **Specific examples from the code:** Again, without the actual code, we can't provide specific examples. If the code raises exceptions like `raise ValueError(\"Invalid input provided\")`, it complies. However, if it raises exceptions with no message or a generic message like `raise ValueError()`, it would not comply.\n\n### Summary\n- For **ERR-001**, we need to verify if specific exceptions are used. If the code uses bare `except`, it does not comply.\n- For **ERR-002**, we need to check if exceptions have descriptive messages. If they lack clarity, it does not comply.\n\nIn conclusion, to fully assess the compliance with the YAML specification, we would need to see the actual exception handling code. This analysis highlights the importance of using specific exceptions and providing clear messages to enhance error handling in Python!",
+                "category": "error_handling",
+                "rules_applied": [
+                    "ERR-001",
+                    "ERR-002"
+                ]
+            }
+        },
+        "security": {
+            "yaml_rules": [
+                "SEC-001",
+                "SEC-002"
+            ],
+            "json_analysis": {
+                "category": "security",
+                "rules_applied": [
+                    "SEC-001",
+                    "SEC-002"
+                ],
+                "overall_compliance_score": 0,
+                "files_analyzed": [
+                    "auth.py",
+                    "sample.py",
+                    "utils.py"
+                ],
+                "detailed_violations": [
+                    {
+                        "yaml_rule_id": "SEC-001",
+                        "yaml_rule_name": "Input Validation",
+                        "file": "auth.py",
+                        "line": 27,
+                        "violation_description": "No input validation for username and password in register_user method.",
+                        "severity": "critical",
+                        "suggestion": "Implement input validation to ensure username and password meet security requirements."
+                    },
+                    {
+                        "yaml_rule_id": "SEC-001",
+                        "yaml_rule_name": "Input Validation",
+                        "file": "auth.py",
+                        "line": 45,
+                        "violation_description": "No input validation for username and password in login method.",
+                        "severity": "critical",
+                        "suggestion": "Implement input validation to ensure username and password meet security requirements."
+                    },
+                    {
+                        "yaml_rule_id": "SEC-002",
+                        "yaml_rule_name": "No Hardcoded Secrets",
+                        "file": "auth.py",
+                        "line": 8,
+                        "violation_description": "Hardcoded secret key found in the code.",
+                        "severity": "critical",
+                        "suggestion": "Remove hardcoded secrets and use environment variables or secure vaults."
+                    },
+                    {
+                        "yaml_rule_id": "SEC-002",
+                        "yaml_rule_name": "No Hardcoded Secrets",
+                        "file": "auth.py",
+                        "line": 9,
+                        "violation_description": "Hardcoded password found in the code.",
+                        "severity": "critical",
+                        "suggestion": "Remove hardcoded passwords and use secure methods for password management."
+                    },
+                    {
+                        "yaml_rule_id": "SEC-002",
+                        "yaml_rule_name": "No Hardcoded Secrets",
+                        "file": "sample.py",
+                        "line": 5,
+                        "violation_description": "Hardcoded database password found in the code.",
+                        "severity": "critical",
+                        "suggestion": "Remove hardcoded secrets and use environment variables or secure vaults."
+                    },
+                    {
+                        "yaml_rule_id": "SEC-002",
+                        "yaml_rule_name": "No Hardcoded Secrets",
+                        "file": "sample.py",
+                        "line": 6,
+                        "violation_description": "Hardcoded API key found in the code.",
+                        "severity": "critical",
+                        "suggestion": "Remove hardcoded secrets and use environment variables or secure vaults."
+                    },
+                    {
+                        "yaml_rule_id": "SEC-002",
+                        "yaml_rule_name": "No Hardcoded Secrets",
+                        "file": "sample.py",
+                        "line": 7,
+                        "violation_description": "Hardcoded secret token found in the code.",
+                        "severity": "critical",
+                        "suggestion": "Remove hardcoded secrets and use environment variables or secure vaults."
+                    },
+                    {
+                        "yaml_rule_id": "SEC-002",
+                        "yaml_rule_name": "No Hardcoded Secrets",
+                        "file": "utils.py",
+                        "line": 5,
+                        "violation_description": "Hardcoded secret found in the code.",
+                        "severity": "critical",
+                        "suggestion": "Remove hardcoded secrets and use environment variables or secure vaults."
+                    }
+                ],
+                "compliant_files": [],
+                "summary": "The analyzed files contain multiple critical security violations, including lack of input validation and hardcoded secrets."
+            },
+            "streaming_analysis": {
+                "streaming_content": "Let's dive into the security analysis of the provided Python code, focusing on the two critical rules outlined in the YAML specification. We'll break it down step-by-step for clarity!\n\n### SEC-001: Input Validation (critical severity)\n- **What the rule requires:** This rule mandates that all user inputs must be validated to ensure they meet expected formats and constraints. This is crucial to prevent malicious data from being processed by the application.\n  \n- **Whether the code complies:** We need to check if the code in `auth.py`, `sample.py`, and `utils.py` validates user inputs effectively.\n\n- **Specific examples from the code:** \n  - If `auth.py` contains functions that accept user credentials, we should look for checks that ensure these inputs are not empty, are of the correct type (e.g., strings), and conform to expected patterns (like email formats).\n  - In `sample.py`, if there are any functions that take user data (like form submissions), we should see validation logic that checks for valid data types and ranges.\n  - For `utils.py`, any utility functions that process user inputs should also include validation checks.\n\n### SEC-002: No Hardcoded Secrets (critical severity)\n- **What the rule requires:** This rule states that no sensitive information, such as passwords or API keys, should be hardcoded directly into the source code. This is vital for protecting sensitive data from being exposed in version control systems or through code leaks.\n\n- **Whether the code complies:** We need to examine all three files to see if any hardcoded secrets are present.\n\n- **Specific examples from the code:**\n  - In `auth.py`, if there are any lines that directly assign a password or API key to a variable, that would be a violation of this rule.\n  - In `sample.py`, we should look for any instances where sensitive information is included in comments or strings.\n  - `utils.py` should also be scrutinized for any hardcoded credentials that could compromise security.\n\n### Conclusion\nIn summary, we need to thoroughly analyze each of the three files against these two critical security rules. The focus should be on ensuring that all user inputs are validated and that no sensitive information is hardcoded. By adhering to these specifications, we can significantly enhance the security posture of the application. Let's get to work on that analysis!",
+                "category": "security",
+                "rules_applied": [
+                    "SEC-001",
+                    "SEC-002"
+                ]
+            }
+        },
+        "performance": {
+            "yaml_rules": [
+                "PER-001",
+                "PER-002"
+            ],
+            "json_analysis": {
+                "category": "performance",
+                "rules_applied": [
+                    "PER-001",
+                    "PER-002"
+                ],
+                "overall_compliance_score": 0,
+                "files_analyzed": [
+                    "auth.py",
+                    "sample.py",
+                    "utils.py"
+                ],
+                "detailed_violations": [
+                    {
+                        "yaml_rule_id": "PER-001",
+                        "yaml_rule_name": "Efficient Data Structures",
+                        "file": "auth.py",
+                        "line": 20,
+                        "violation_description": "SQL injection vulnerability due to direct string interpolation in SQL queries.",
+                        "severity": "medium",
+                        "suggestion": "Use parameterized queries to prevent SQL injection."
+                    },
+                    {
+                        "yaml_rule_id": "PER-001",
+                        "yaml_rule_name": "Efficient Data Structures",
+                        "file": "auth.py",
+                        "line": 40,
+                        "violation_description": "SQL injection vulnerability due to direct string interpolation in SQL queries.",
+                        "severity": "medium",
+                        "suggestion": "Use parameterized queries to prevent SQL injection."
+                    },
+                    {
+                        "yaml_rule_id": "PER-001",
+                        "yaml_rule_name": "Efficient Data Structures",
+                        "file": "sample.py",
+                        "line": 40,
+                        "violation_description": "SQL injection vulnerability due to direct string interpolation in SQL queries.",
+                        "severity": "medium",
+                        "suggestion": "Use parameterized queries to prevent SQL injection."
+                    },
+                    {
+                        "yaml_rule_id": "PER-001",
+                        "yaml_rule_name": "Efficient Data Structures",
+                        "file": "utils.py",
+                        "line": 20,
+                        "violation_description": "Command injection vulnerability due to using shell=True in subprocess calls.",
+                        "severity": "medium",
+                        "suggestion": "Avoid using shell=True and validate command inputs."
+                    },
+                    {
+                        "yaml_rule_id": "PER-001",
+                        "yaml_rule_name": "Efficient Data Structures",
+                        "file": "utils.py",
+                        "line": 10,
+                        "violation_description": "Unsafe pickle loading can lead to arbitrary code execution.",
+                        "severity": "medium",
+                        "suggestion": "Use safer serialization methods instead of pickle."
+                    }
+                ],
+                "compliant_files": [],
+                "summary": "The analyzed files exhibit multiple performance-related violations, particularly concerning the use of efficient data structures and security vulnerabilities."
+            },
+            "streaming_analysis": {
+                "streaming_content": "Let's dive into the performance analysis of the provided Python code, focusing on how well it adheres to the YAML specification rules. We'll break it down rule by rule, ensuring we stick to the requirements laid out in the YAML.\n\n### Rule PER-001: Efficient Data Structures (medium severity)\n\n- **What the rule requires**: This rule emphasizes the importance of using appropriate data structures for operations. The goal is to ensure that the code is efficient in terms of performance, particularly when handling data.\n\n- **Whether the code complies**: Without the actual content of the files (auth.py, sample.py, and utils.py), we can't definitively assess compliance. However, we can discuss what to look for in the code.\n\n- **Specific examples from the code**: \n  - If the code uses lists for frequent lookups, it may not comply, as sets or dictionaries would be more efficient.\n  - If there are operations that involve large datasets, check if tuples or namedtuples are used instead of lists for better performance.\n  - Look for the use of collections like `deque` for queue operations or `defaultdict` for counting occurrences, which would indicate compliance with this rule.\n\n### Rule PER-002: Database Query Optimization (high severity)\n\n- **What the rule requires**: This rule mandates that database queries must be optimized. This is a high-severity requirement, meaning that failure to comply could significantly impact performance.\n\n- **Whether the code complies**: Again, without the actual database interaction code, we can't make a definitive judgment. However, we can outline what to check for.\n\n- **Specific examples from the code**:\n  - Look for the use of indexed columns in queries. If the code is querying large tables without indexes, it would not comply.\n  - Check if there are any unnecessary SELECT * statements. Instead, the code should specify only the required columns.\n  - If there are multiple queries that could be combined into a single query (like using JOINs), that would indicate a lack of optimization.\n  - Ensure that the code uses parameterized queries to prevent SQL injection and improve performance.\n\n### Conclusion\n\nIn summary, while we can't directly assess the compliance of the code without seeing the actual implementations in the files, we can highlight the key areas to focus on for each rule. For **PER-001**, look for the use of efficient data structures that suit the operations being performed. For **PER-002**, ensure that database queries are optimized for performance, as this is crucial for the overall efficiency of the application. \n\nBy keeping these points in mind, you can better evaluate how well the code adheres to the specified performance guidelines!",
+                "category": "performance",
+                "rules_applied": [
+                    "PER-001",
+                    "PER-002"
+                ]
+            }
+        }
+    },
+    "overall_metrics": {
+        "total_categories_validated": 6,
+        "total_yaml_rules_applied": 15,
+        "total_violations_found": 54,
+        "violations_by_severity": {
+            "critical": 8,
+            "high": 16,
+            "medium": 30,
+            "low": 0
+        },
+        "overall_compliance_score": 0,
+        "compliance_level": "POOR"
+    }
+}

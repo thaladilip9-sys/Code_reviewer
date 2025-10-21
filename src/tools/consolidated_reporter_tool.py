@@ -8,7 +8,7 @@ from langchain.agents import Tool
 class ConsolidatedReporter:
     """
     Generates comprehensive HTML reports from all analysis tools.
-    Includes expandable sections with detailed analysis results.
+    Includes expandable sections with detailed analysis results and YAML specification analysis.
     """
     
     def __init__(self, output_dir: str = "code_review_reports"):
@@ -24,9 +24,6 @@ class ConsolidatedReporter:
             report_dir = os.path.join(self.output_dir, f"full_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
             os.makedirs(report_dir, exist_ok=True)
 
-            # with open("state.json",'w') as f:
-            #     json.dump(state,f,indent=4)
-            
             # Extract and validate all analysis data
             analysis_data = self._extract_analysis_data(state)
             
@@ -65,11 +62,27 @@ class ConsolidatedReporter:
             "standards": self._extract_standards_data(state.get("standards_result")),
             "requirements": self._extract_requirements_data(state.get("requirement_validation")),
             "deep_eval": self._extract_deep_eval_data(state.get("deep_evaluation")),
+            "yaml_spec": self._extract_yaml_spec_data(state.get("yaml_spec_data")),
             "original_requirements": state.get("requirements", {}),
             "files_analyzed": len(state.get("files", [])),
             "error": state.get("error")
         }
         return analysis_data
+    
+    def _extract_yaml_spec_data(self, yaml_spec_data: Any) -> Dict:
+        """Extract YAML specification analysis data"""
+        if not yaml_spec_data:
+            return {"available": False}
+        
+        if "error" in yaml_spec_data:
+            return {"available": False, "error": yaml_spec_data["error"]}
+        
+        return {
+            "available": True,
+            "specification_used": yaml_spec_data.get("specification_used", {}),
+            "validation_steps": yaml_spec_data.get("validation_steps", {}),
+            "overall_metrics": yaml_spec_data.get("overall_metrics", {})
+        }
     
     def _extract_standards_data(self, standards_data: Any) -> Dict:
         """Extract standards analysis data"""
@@ -206,13 +219,6 @@ class ConsolidatedReporter:
         
         # Calculate overall metrics
         overall_metrics = self._calculate_overall_metrics(analysis_data)
-
-        # print("Analysys data", analysis_data)
-
-        with open("./analysis_data.json",'w') as f:
-            json.dump(analysis_data,f,indent=4) 
-
-        
 
         html_content = f"""
 <!DOCTYPE html>
@@ -483,6 +489,39 @@ class ConsolidatedReporter:
             font-weight: 500;
         }}
         
+        /* YAML Spec Styles */
+        .violation-item {{
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 6px;
+            border-left: 4px solid var(--error);
+            background: #fef2f2;
+        }}
+        
+        .violation-warning {{
+            border-left-color: var(--warning);
+            background: #fffbeb;
+        }}
+        
+        .violation-info {{
+            border-left-color: var(--info);
+            background: #f0f9ff;
+        }}
+        
+        .severity-badge {{
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }}
+        
+        .severity-critical {{ background: #dc2626; color: white; }}
+        .severity-high {{ background: #ef4444; color: white; }}
+        .severity-medium {{ background: #f59e0b; color: white; }}
+        .severity-low {{ background: #3b82f6; color: white; }}
+        
         /* Footer */
         .footer {{
             text-align: center;
@@ -535,6 +574,7 @@ class ConsolidatedReporter:
             </div>
         </div>
         
+        {self._generate_yaml_spec_section(analysis_data['yaml_spec'])}
         {self._generate_requirements_section(analysis_data['requirements'])}
         {self._generate_standards_section(analysis_data['standards'])}
         {self._generate_deep_eval_section(analysis_data['deep_eval'])}
@@ -566,7 +606,8 @@ class ConsolidatedReporter:
                 const content = section.querySelector('.expandable-content');
                 const hasIssues = content.querySelector('.tool-output')?.textContent.includes('Issue:') || 
                                 content.querySelector('.requirement-missing') ||
-                                content.querySelector('.requirement-partial');
+                                content.querySelector('.requirement-partial') ||
+                                content.querySelector('.violation-item');
                 
                 if (hasIssues) {{
                     content.classList.add('expanded');
@@ -580,6 +621,163 @@ class ConsolidatedReporter:
 </html>
         """
         return html_content
+    
+    def _generate_yaml_spec_section(self, yaml_spec_data: Dict) -> str:
+        """Generate YAML specification analysis section"""
+        if not yaml_spec_data.get("available", False):
+            if yaml_spec_data.get("error"):
+                return f'''
+                <div class="section">
+                    <h2 class="section-title"><i class="fas fa-file-contract"></i> YAML Specification Analysis</h2>
+                    <div class="status-badge status-error">ERROR</div>
+                    <p style="margin-top: 1rem; color: #6b7280;">{yaml_spec_data.get("error", "Unknown error")}</p>
+                </div>
+                '''
+            return '''
+            <div class="section">
+                <h2 class="section-title"><i class="fas fa-file-contract"></i> YAML Specification Analysis</h2>
+                <div class="status-badge status-info">NOT PERFORMED</div>
+                <p style="margin-top: 1rem; color: #6b7280;">No YAML specification analysis data available.</p>
+            </div>
+            '''
+        
+        specification_used = yaml_spec_data.get("specification_used", {})
+        validation_steps = yaml_spec_data.get("validation_steps", {})
+        overall_metrics = yaml_spec_data.get("overall_metrics", {})
+        
+        compliance_score = overall_metrics.get('overall_compliance_score', 0)
+        total_violations = overall_metrics.get('total_violations_found', 0)
+        compliance_level = overall_metrics.get('compliance_level', 'UNKNOWN')
+        
+        # Generate category sections
+        category_sections = ""
+        for category_name, category_data in validation_steps.items():
+            category_sections += self._generate_yaml_category_section(category_name, category_data)
+        
+        return f"""
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-file-contract"></i> YAML Specification Analysis</h2>
+            
+            <div class="summary-grid">
+                <div class="metric-card">
+                    <div class="metric-value score-{compliance_level.lower()}">{compliance_score}%</div>
+                    <div class="metric-label">Compliance Score</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">{overall_metrics.get('total_categories_validated', 0)}</div>
+                    <div class="metric-label">Categories</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">{overall_metrics.get('total_yaml_rules_applied', 0)}</div>
+                    <div class="metric-label">Rules Applied</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">{total_violations}</div>
+                    <div class="metric-label">Total Violations</div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin: 1.5rem 0;">
+                <div class="status-badge status-{'success' if compliance_score >= 80 else 'warning' if compliance_score >= 60 else 'error'}">
+                    Specification Compliance: {compliance_score}% ({compliance_level})
+                </div>
+            </div>
+            
+            <!-- Specification Information -->
+            <div style="background: #f0f9ff; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                <h4 style="margin-bottom: 1rem; color: #1e40af;">Specification Details</h4>
+                <p><strong>Name:</strong> {specification_used.get('name', 'Unknown Specification')}</p>
+                <p><strong>Version:</strong> {specification_used.get('version', 'N/A')}</p>
+                <p><strong>Description:</strong> {specification_used.get('description', 'No description available')}</p>
+                <p><strong>Last Updated:</strong> {specification_used.get('last_updated', 'N/A')}</p>
+            </div>
+            
+            {category_sections}
+        </div>
+        """
+    
+    def _generate_yaml_category_section(self, category_name: str, category_data: Dict) -> str:
+        """Generate HTML for a single YAML validation category"""
+        json_analysis = category_data.get('json_analysis', {})
+        streaming_analysis = category_data.get('streaming_analysis', {})
+        
+        compliance_score = json_analysis.get('overall_compliance_score', 0)
+        violations = json_analysis.get('detailed_violations', [])
+        summary = json_analysis.get('summary', '')
+        
+        # Generate violations HTML
+        violations_html = ""
+        for violation in violations:
+            severity = violation.get('severity', 'medium')
+            violations_html += f"""
+            <div class="violation-item violation-{severity}">
+                <div class="severity-badge severity-{severity}">{severity.upper()}</div>
+                <strong>{violation.get('yaml_rule_name', 'Unknown Rule')}</strong>
+                <div style="margin-top: 0.5rem;">
+                    <strong>File:</strong> {violation.get('file', 'Unknown')} | 
+                    <strong>Line:</strong> {violation.get('line', 'Unknown')}
+                </div>
+                <div style="margin-top: 0.5rem;">
+                    <strong>Description:</strong> {violation.get('violation_description', 'No description')}
+                </div>
+                <div style="margin-top: 0.5rem;">
+                    <strong>Suggestion:</strong> {violation.get('suggestion', 'No suggestion')}
+                </div>
+            </div>
+            """
+        
+        # Generate streaming analysis HTML
+        streaming_html = ""
+        streaming_content = streaming_analysis.get('streaming_content', '')
+        if streaming_content:
+            streaming_html = f"""
+            <div class="expandable-section">
+                <div class="expandable-header">
+                    <div class="expandable-title">
+                        <i class="fas fa-comment-alt"></i>
+                        View Detailed Analysis
+                    </div>
+                    <i class="fas fa-chevron-down expandable-icon"></i>
+                </div>
+                <div class="expandable-content">
+                    <div class="tool-results">
+                        <div class="tool-output">{streaming_content}</div>
+                    </div>
+                </div>
+            </div>
+            """
+        
+        return f"""
+        <div class="expandable-section">
+            <div class="expandable-header">
+                <div class="expandable-title">
+                    <i class="fas fa-folder"></i>
+                    {category_name.replace('_', ' ').title()} ({len(violations)} violations)
+                </div>
+                <i class="fas fa-chevron-down expandable-icon"></i>
+            </div>
+            <div class="expandable-content">
+                <div class="tool-results">
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                        <div class="status-badge status-{'success' if compliance_score >= 80 else 'warning' if compliance_score >= 60 else 'error'}">
+                            Compliance: {compliance_score}%
+                        </div>
+                    </div>
+                    
+                    {summary and f'<div style="background: #f8fafc; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;"><strong>Summary:</strong> {summary}</div>' or ''}
+                    
+                    {violations_html if violations_html else '''
+                    <div style="text-align: center; padding: 2rem; color: #6b7280;">
+                        <i class="fas fa-check-circle" style="font-size: 2rem; color: var(--success); margin-bottom: 1rem;"></i>
+                        <p>No violations found in this category.</p>
+                    </div>
+                    '''}
+                    
+                    {streaming_html}
+                </div>
+            </div>
+        </div>
+        """
         
     def _generate_requirements_section(self, requirements_data: Dict) -> str:
         """Generate requirements validation section with expandable details for categorized requirements"""
@@ -851,6 +1049,7 @@ class ConsolidatedReporter:
                 html_sections.append(category_html)
         
         return "\n".join(html_sections)
+    
     def _generate_standards_section(self, standards_data: Dict) -> str:
         """Generate standards analysis section with expandable details"""
         if not standards_data.get("available", False):
@@ -1124,6 +1323,14 @@ class ConsolidatedReporter:
             if deep_data.get('overall_score', 0) < 3:
                 recommendations.append("Address code quality issues identified in deep evaluation")
         
+        # YAML spec recommendations
+        if analysis_data['yaml_spec'].get('available', False):
+            yaml_data = analysis_data['yaml_spec']
+            overall_metrics = yaml_data.get('overall_metrics', {})
+            total_violations = overall_metrics.get('total_violations_found', 0)
+            if total_violations > 0:
+                recommendations.append(f"Fix {total_violations} YAML specification violations")
+        
         if not recommendations:
             recommendations.append("No critical issues found. Maintain current code quality standards.")
         
@@ -1137,6 +1344,7 @@ class ConsolidatedReporter:
             "requirements_analysis": analysis_data['requirements'],
             "standards_analysis": analysis_data['standards'],
             "deep_evaluation": analysis_data['deep_eval'],
+            "yaml_spec_analysis": analysis_data['yaml_spec'],
             "files_analyzed": analysis_data['files_analyzed']
         }
     

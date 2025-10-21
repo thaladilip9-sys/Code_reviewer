@@ -1,0 +1,175 @@
+specification:
+  name: "Python Code Quality Specification"
+  version: "1.0.0"
+  description: "Comprehensive guidelines for Python code quality and best practices"
+  last_updated: "2024-01-15"
+
+metadata:
+  author: "Code Review AI System"
+  scope: ["python", "code-quality", "best-practices"]
+  compliance_level: "required"
+
+coding_standards:
+  naming_conventions:
+    description: "Python naming conventions following PEP8"
+    rules:
+      - rule_id: "NAM-001"
+        name: "Function Naming"
+        description: "Functions should use snake_case"
+        pattern: "^[a-z][a-z0-9_]*$"
+        severity: "high"
+        example:
+          valid: "calculate_total_amount"
+          invalid: "CalculateTotalAmount"
+
+      - rule_id: "NAM-002"
+        name: "Class Naming"
+        description: "Classes should use PascalCase"
+        pattern: "^[A-Z][a-zA-Z0-9]*$"
+        severity: "high"
+        example:
+          valid: "UserAccount"
+          invalid: "user_account"
+
+      - rule_id: "NAM-003"
+        name: "Constant Naming"
+        description: "Constants should use UPPER_CASE"
+        pattern: "^[A-Z][A-Z0-9_]*$"
+        severity: "medium"
+        example:
+          valid: "MAX_RETRY_COUNT"
+          invalid: "max_retry_count"
+
+  code_structure:
+    description: "Code organization and structure guidelines"
+    rules:
+      - rule_id: "STR-001"
+        name: "Function Length"
+        description: "Functions should not exceed 50 lines"
+        max_lines: 50
+        severity: "medium"
+        measurement: "lines_of_code"
+
+      - rule_id: "STR-002"
+        name: "Class Length"
+        description: "Classes should not exceed 200 lines"
+        max_lines: 200
+        severity: "medium"
+        measurement: "lines_of_code"
+
+      - rule_id: "STR-003"
+        name: "Method Complexity"
+        description: "Methods should have low cyclomatic complexity"
+        max_complexity: 10
+        severity: "high"
+        measurement: "cyclomatic_complexity"
+
+  documentation:
+    description: "Documentation requirements"
+    rules:
+      - rule_id: "DOC-001"
+        name: "Function Docstrings"
+        description: "All functions should have docstrings"
+        required: true
+        severity: "medium"
+        template: |
+          \"\"\"
+          [Brief description]
+          
+          Args:
+              param1: Description
+              param2: Description
+          
+          Returns:
+              Description of return value
+          \"\"\"
+
+      - rule_id: "DOC-002"
+        name: "Class Docstrings"
+        description: "All classes should have docstrings"
+        required: true
+        severity: "medium"
+
+      - rule_id: "DOC-003"
+        name: "Module Docstrings"
+        description: "All modules should have docstrings"
+        required: true
+        severity: "low"
+
+  error_handling:
+    description: "Error handling and exception guidelines"
+    rules:
+      - rule_id: "ERR-001"
+        name: "Specific Exceptions"
+        description: "Use specific exceptions instead of bare except"
+        severity: "high"
+        forbidden_patterns: ["except:", "except Exception:"]
+        recommended: "Use specific exception types"
+
+      - rule_id: "ERR-002"
+        name: "Exception Messages"
+        description: "Exceptions should have descriptive messages"
+        severity: "medium"
+        required: true
+
+  security:
+    description: "Security best practices"
+    rules:
+      - rule_id: "SEC-001"
+        name: "Input Validation"
+        description: "Validate all user inputs"
+        severity: "critical"
+        required: true
+
+      - rule_id: "SEC-002"
+        name: "No Hardcoded Secrets"
+        description: "No passwords, API keys in code"
+        severity: "critical"
+        forbidden_patterns: 
+          - "password.*=.*['\\\"]"
+          - "api_key.*=.*['\\\"]"
+          - "secret.*=.*['\\\"]"
+
+  performance:
+    description: "Performance optimization guidelines"
+    rules:
+      - rule_id: "PER-001"
+        name: "Efficient Data Structures"
+        description: "Use appropriate data structures for operations"
+        severity: "medium"
+        guidelines:
+          - "Use sets for membership testing"
+          - "Use dictionaries for key-value lookups"
+          - "Avoid nested loops when possible"
+
+      - rule_id: "PER-002"
+        name: "Database Query Optimization"
+        description: "Optimize database queries"
+        severity: "high"
+        required: true
+
+validation_config:
+  enabled_rules:
+    - "NAM-001"
+    - "NAM-002"
+    - "NAM-003"
+    - "STR-001"
+    - "STR-002"
+    - "DOC-001"
+    - "DOC-002"
+    - "ERR-001"
+    - "SEC-001"
+    - "SEC-002"
+    - "PER-001"
+
+  thresholds:
+    overall_score: 80
+    critical_issues: 0
+    high_issues: 2
+    medium_issues: 5
+
+  exemptions:
+    - file_pattern: "test_*.py"
+      rules: ["STR-001", "DOC-001"]
+    - file_pattern: "migrations/*.py"
+      rules: ["STR-001", "DOC-001", "DOC-002"]

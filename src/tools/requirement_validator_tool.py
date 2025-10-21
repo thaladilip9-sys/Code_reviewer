@@ -186,24 +186,10 @@ class RequirementValidator:
             
             async for chunk in self.llm.astream(messages):
                 content = chunk.content if hasattr(chunk, 'content') else str(chunk)
-                
-                if content and content not in full_response:
-                    print_buffer += content
-                    full_response += content
-                    
-                    current_time = time.time()
-                    
-                    # Print if enough time has passed or buffer is getting large
-                    if (current_time - last_print_time >= BATCH_INTERVAL) or len(print_buffer) > 50:
-                        print(print_buffer, end="", flush=True)
-                        print_buffer = ""
-                        last_print_time = current_time
+                # print(content, end="", flush=True)
+                full_response += content
             
-            # Print any remaining content
-            if print_buffer:
-                print(print_buffer, end="", flush=True)
-            
-            print("\n\n   " + "=" * 50)
+            print("\n   " + "=" * 50)
             
             return full_response
             
