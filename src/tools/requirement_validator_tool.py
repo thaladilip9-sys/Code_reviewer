@@ -9,7 +9,10 @@ from langchain.agents import Tool
 from langchain.schema import HumanMessage, SystemMessage
 from src.utils.langchain_openai import OpenAILLM
 from datetime import datetime
-
+from src.utils.logger import get_logger, logger_manager, StreamingLogger
+streaming_logger = StreamingLogger()
+# Get logger instance
+logger = get_logger()
 class RequirementValidator:
     """
     Validates code implementation against requirements with async streaming output.
@@ -23,7 +26,7 @@ class RequirementValidator:
     
     def validate_requirements(self, state: Dict) -> Dict:
         """Validate code implementation - sync wrapper for async method"""
-        print("🔍 Starting comprehensive requirements validation...\n")
+        logger.info("🔍 Starting comprehensive requirements validation...\n")
         
         try:
             # Check if we're in an event loop
@@ -44,7 +47,7 @@ class RequirementValidator:
                 
         except Exception as e:
             error_msg = f"Requirement validation failed: {str(e)}"
-            print(f"❌ {error_msg}")
+            logger.error(f"❌ {error_msg}")
             return {
                 "error": error_msg,
                 "timestamp": str(datetime.now())
@@ -62,7 +65,7 @@ class RequirementValidator:
             files = state.get("files", [])
             
             if not requirements:
-                print("ℹ️ No requirements provided - skipping validation")
+                logger.info("ℹ️ No requirements provided - skipping validation")
                 return {
                     "skipped": True,
                     "reason": "No requirements provided for validation",
@@ -70,13 +73,13 @@ class RequirementValidator:
                 }
             
             if not files:
-                print("❌ No code files available for analysis")
+                logger.info("❌ No code files available for analysis")
                 return {
                     "error": "No code files available for requirement validation",
                     "timestamp": str(datetime.now())
                 }
             
-            print(f"📋 Found {len(requirements)} requirements and {len(files)} code files\n")
+            logger.info(f"📋 Found {len(requirements)} requirements and {len(files)} code files\n")
             
             # Perform async streaming analysis
             analysis_result = await self._async_streaming_analysis(requirements, files)
@@ -86,12 +89,12 @@ class RequirementValidator:
             analysis_result["files_analyzed"] = len(files)
             analysis_result["requirements_analyzed"] = len(requirements)
             
-            print("\n🎯 Requirement validation completed successfully!")
+            logger.info("\n🎯 Requirement validation completed successfully!")
             return analysis_result
             
         except Exception as e:
             error_msg = f"Requirement validation failed: {str(e)}"
-            print(f"❌ {error_msg}")
+            logger.error(f"❌ {error_msg}")
             return {
                 "error": error_msg,
                 "timestamp": str(datetime.now())
@@ -100,18 +103,18 @@ class RequirementValidator:
     async def _async_streaming_analysis(self, requirements: Dict, files: List[Dict]) -> Dict:
         """Perform async analysis with separate JSON creation and beautified streaming"""
         
-        print("=" * 70)
-        print("🔄 Performing Async Requirements Analysis")
-        print("=" * 70)
+        logger.info("=" * 70)
+        logger.info("🔄 Performing Async Requirements Analysis")
+        logger.info("=" * 70)
         
         # Step 1: Create structured JSON analysis (non-streaming)
-        print("\n📊 Step 1: Creating structured JSON analysis...")
+        logger.info("\n📊 Step 1: Creating structured JSON analysis...")
         json_analysis_task = asyncio.create_task(
             self._create_json_analysis(requirements, files)
         )
         
         # Step 2: Run beautified streaming analysis concurrently
-        print("🎨 Step 2: Starting beautified streaming analysis...")
+        logger.info("🎨 Step 2: Starting beautified streaming analysis...")
         streaming_task = asyncio.create_task(
             self._beautified_streaming_analysis(requirements, files)
         )
@@ -125,13 +128,13 @@ class RequirementValidator:
         
         # Handle exceptions
         if isinstance(json_result, Exception):
-            print(f"❌ JSON analysis failed: {json_result}")
+            logger.info(f"❌ JSON analysis failed: {json_result}")
             return self._create_fallback_structure()
         
         if isinstance(streaming_output, Exception):
-            print(f"⚠️ Streaming analysis had issues: {streaming_output}")
+            logger.info(f"⚠️ Streaming analysis had issues: {streaming_output}")
         
-        print("\n✅ Both JSON and streaming analysis completed!")
+        logger.info("\n✅ Both JSON and streaming analysis completed!")
         
         # Display comprehensive summary
         self._display_comprehensive_summary(json_result)
@@ -151,16 +154,16 @@ class RequirementValidator:
                 HumanMessage(content=prompt)
             ]
             
-            print("   🧠 Generating structured JSON analysis...")
+            logger.info("   🧠 Generating structured JSON analysis...")
             response = await self.non_streaming_llm.ainvoke(messages)
             
             # Parse the JSON response
             result = self._parse_json_response(response.content)
-            print("   ✅ JSON analysis completed successfully")
+            logger.info("   ✅ JSON analysis completed successfully")
             return result
             
         except Exception as e:
-            print(f"   ❌ JSON analysis failed: {e}")
+            logger.error(f"   ❌ JSON analysis failed: {e}")
             raise e
     
     async def _beautified_streaming_analysis(self, requirements: Dict, files: List[Dict]) -> str:
@@ -176,20 +179,57 @@ class RequirementValidator:
                 HumanMessage(content=prompt)
             ]
             
-            print("   " + "=" * 50)
+            logger.info("   " + "=" * 50)
+            logger.info("   🎯 Starting Beautified Requirements Analysis")
+            logger.info("   " + "=" * 50)
             
             full_response = ""
+            chunk_count = 0
+            start_time = time.time()
+            current_line = ""
+            
             async for chunk in self.llm.astream(messages):
                 content = chunk.content if hasattr(chunk, 'content') else str(chunk)
-                # print(content, end="", flush=True)
-                full_response += content
+                
+                if content.strip():
+                    # Handle line breaks properly
+                    if '\n' in content:
+                        lines = content.split('\n')
+                        for i, line in enumerate(lines):
+                            if i == 0 and current_line:
+                                # Complete the current line
+                                current_line += line
+                                logger.info(f"   📝 {current_line}")
+                                current_line = ""
+                            elif line.strip():
+                                if i == len(lines) - 1 and not line.endswith('\n'):
+                                    # Last line might continue
+                                    current_line = line
+                                else:
+                                    logger.info(f"   📝 {line}")
+                    else:
+                        # Accumulate content for the current line
+                        current_line += content
+                    
+                    full_response += content
+                    chunk_count += 1
             
-            print("\n   " + "=" * 50)
+            # Log any remaining content in current_line
+            if current_line.strip():
+                logger.info(f"   📝 {current_line}")
+            
+            end_time = time.time()
+            duration = end_time - start_time
+            
+            logger.info("   " + "=" * 50)
+            logger.info(f"   ✅ Analysis Complete - Processed {chunk_count} chunks in {duration:.1f}s")
+            logger.info(f"   📊 Generated {len(full_response):,} characters of analysis")
+            logger.info("   " + "=" * 50)
             
             return full_response
             
         except Exception as e:
-            print(f"   ⚠️ Streaming analysis interrupted: {e}")
+            logger.error(f"   ⚠️ Streaming analysis interrupted: {e}")
             return ""
     
     def _create_json_analysis_prompt(self, requirements: Dict, files: List[Dict]) -> str:
@@ -343,7 +383,7 @@ class RequirementValidator:
             return self._validate_json_structure(result)
             
         except Exception as e:
-            print(f"   ⚠️ JSON parsing failed: {e}")
+            logger.error(f"   ⚠️ JSON parsing failed: {e}")
             return self._create_fallback_structure()
     
     def _validate_json_structure(self, result: Dict) -> Dict:
@@ -426,15 +466,15 @@ class RequirementValidator:
     
     def _display_comprehensive_summary(self, result: Dict):
         """Display comprehensive analysis summary"""
-        print("\n" + "=" * 70)
-        print("📊 COMPREHENSIVE ANALYSIS SUMMARY")
-        print("=" * 70)
+        logger.info("\n" + "=" * 70)
+        logger.info("📊 COMPREHENSIVE ANALYSIS SUMMARY")
+        logger.info("=" * 70)
         
         comp_analysis = result.get("comprehensive_analysis", {})
         alignment_scores = comp_analysis.get("overall_alignment_scores", {})
         
         # Display implementation metrics
-        print("\n🎯 IMPLEMENTATION METRICS:")
+        logger.info("\n🎯 IMPLEMENTATION METRICS:")
         for category, data in alignment_scores.items():
             if isinstance(data, dict):
                 total = data.get("total", 0)
@@ -444,19 +484,19 @@ class RequirementValidator:
                 if total > 0:
                     category_name = category.replace('_', ' ').title()
                     implementation_rate = (implemented / total) * 100
-                    print(f"   📈 {category_name}: {implementation_rate:.1f}% implemented")
-                    print(f"      ✅ {implemented}/{total} requirements")
-                    print(f"      🎯 {confidence:.1f}% confidence")
+                    logger.info(f"   📈 {category_name}: {implementation_rate:.1f}% implemented")
+                    logger.info(f"      ✅ {implemented}/{total} requirements")
+                    logger.info(f"      🎯 {confidence:.1f}% confidence")
         
         # Overall score
         overall_score = result.get("alignment_analysis", {}).get("overall_alignment_score", 0) * 100
-        print(f"\n🏆 OVERALL ALIGNMENT: {overall_score:.1f}%")
+        logger.info(f"\n🏆 OVERALL ALIGNMENT: {overall_score:.1f}%")
         
         # Executive summary
         exec_summary = comp_analysis.get("executive_summary", "No summary available")
-        print(f"\n📋 EXECUTIVE SUMMARY:\n   {exec_summary}")
+        logger.info(f"\n📋 EXECUTIVE SUMMARY:\n   {exec_summary}")
         
-        print("=" * 70)
+        logger.info("=" * 70)
 
     def get_tool(self) -> Tool:
         """Convert to LangChain Tool"""

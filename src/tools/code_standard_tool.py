@@ -7,7 +7,10 @@ from langchain.agents import Tool
 import chardet
 import json
 from typing import Dict, List
+from src.utils.logger import get_logger, logger_manager
 
+# Get logger instance
+logger = get_logger()
 class CodeStandardsChecker:
     """
     Multi-language code standards checker with enhanced Python tools and HTML reporting.
@@ -297,7 +300,7 @@ class CodeStandardsChecker:
 
     def analyze_files(self, state: dict) -> dict:
         """Analyze all files with improved error handling"""
-        print("🔍 Running multi-file standards check...")
+        logger.info("🔍 Running multi-file standards check...")
         results = []
         for file_info in state.get("files", []):
             try:

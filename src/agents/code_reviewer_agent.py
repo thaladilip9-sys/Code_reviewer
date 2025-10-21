@@ -10,6 +10,10 @@ from src.tools.spec_validator_tool import SpecValidator
 from src.services.file_reader_service import FileReader
 import os
 import asyncio,datetime
+from src.utils.logger import get_logger, logger_manager
+
+# Get logger instance
+logger = get_logger()
 
 class CodeReviewState(Dict):
     # Input fields
@@ -77,7 +81,7 @@ class CodeReviewerAgent:
     async def read_files_node(self, state: CodeReviewState) -> CodeReviewState:
         """Read files from provided paths or direct code"""
         state["current_step"] = "read_files"
-        print("📁 Reading files from paths...")
+        logger.info("📁 Reading files from paths...")
         
         try:
             if state.get("file_paths"):
@@ -92,7 +96,7 @@ class CodeReviewerAgent:
                             "code": file_info["code"]
                         })
                     else:
-                        print(f"⚠️ Skipping {file_info['file_name']}: {file_info['error']}")
+                        logger.info(f"⚠️ Skipping {file_info['file_name']}: {file_info['error']}")
                 
                 state["files"] = valid_files
                 
@@ -110,11 +114,11 @@ class CodeReviewerAgent:
                 state["error"] = "No code or file paths provided"
                 return state
             
-            print(f"📄 Found {len(state.get('files', []))} files to analyze")
+            logger.info(f"📄 Found {len(state.get('files', []))} files to analyze")
             
         except Exception as e:
             state["error"] = f"Error reading files: {str(e)}"
-            print(f"❌ File reading error: {e}")
+            logger.error(f"❌ File reading error: {e}")
         
         return state
     
@@ -124,7 +128,7 @@ class CodeReviewerAgent:
             return state
         
         state["current_step"] = "spec_validation"
-        print("📋 Running YAML specification validation...")
+        logger.info("📋 Running YAML specification validation...")
         
         try:
             spec_tool = self.spec_validator.get_tool()
@@ -133,21 +137,21 @@ class CodeReviewerAgent:
             
             if "error" not in result:
                 overall_score = result.get("overall_metrics", {}).get("overall_compliance_score", 0)
-                print(f"✅ YAML specification validation completed: Score {overall_score}%")
+                logger.info(f"✅ YAML specification validation completed: Score {overall_score}%")
                 import json
                 with open("./yaml_spec_output.json",'w') as f:
                     json.dump(result,f,indent=4) 
                 
-                # Print category summary
+                # logger.info category summary
                 for category, results in result.get("validation_steps", {}).items():
                     rules_applied = results.get("yaml_rules_applied", [])
-                    print(f"   📊 {category}: {len(rules_applied)} rules applied")
+                    logger.info(f"   📊 {category}: {len(rules_applied)} rules applied")
             else:
-                print(f"⚠️ Specification validation completed with issues")
+                logger.info(f"⚠️ Specification validation completed with issues")
             
         except Exception as e:
             state["error"] = f"Specification validation failed: {str(e)}"
-            print(f"❌ Specification validation error: {e}")
+            logger.error(f"❌ Specification validation error: {e}")
         
         return state
     
@@ -157,7 +161,7 @@ class CodeReviewerAgent:
             return state
         
         state["current_step"] = "standards_check"
-        print("📏 Running code standards analysis...")
+        logger.info("📏 Running code standards analysis...")
         
         try:
             standards_tool = self.standards_checker.get_tool()
@@ -167,11 +171,11 @@ class CodeReviewerAgent:
             
             # Calculate standards summary
             standards_summary = self._calculate_standards_summary(result)
-            print(f"✅ Standards analysis completed: {standards_summary}")
+            logger.info(f"✅ Standards analysis completed: {standards_summary}")
             
         except Exception as e:
             state["error"] = f"Standards analysis failed: {str(e)}"
-            print(f"❌ Standards analysis error: {e}")
+            logger.error(f"❌ Standards analysis error: {e}")
         
         return state
     
@@ -188,7 +192,7 @@ class CodeReviewerAgent:
         
         # Skip if no requirements provided
         if not state.get("requirements"):
-            print("ℹ️ No requirements provided, skipping requirement validation")
+            logger.info("ℹ️ No requirements provided, skipping requirement validation")
             state["requirement_validation"] = {
                 "skipped": True,
                 "reason": "No requirements provided for validation"
@@ -197,7 +201,7 @@ class CodeReviewerAgent:
         
         
         
-        print("🔍 Validating requirements implementation...")
+        logger.info("🔍 Validating requirements implementation...")
         
         try:
             requirement_tool = self.requirement_validator.get_tool()
@@ -208,18 +212,18 @@ class CodeReviewerAgent:
             #     json.dump(result,f,indent=4)
 
         
-            # print("requirement_validation", state)
+            # logger.info("requirement_validation", state)
             state["requirement_validation"] = result
             
             if "error" not in result:
                 coverage_score = result.get("alignment_analysis", {}).get("overall_alignment_score", 0)
-                print(f"✅ Requirement validation completed: Score {coverage_score:.2f}")
+                logger.info(f"✅ Requirement validation completed: Score {coverage_score:.2f}")
             else:
-                print(f"⚠️ Requirement validation completed with issues")
+                logger.info(f"⚠️ Requirement validation completed with issues")
             
         except Exception as e:
             state["error"] = f"Requirement validation failed: {str(e)}"
-            print(f"❌ Requirement validation error: {e}")
+            logger.error(f"❌ Requirement validation error: {e}")
         
         return state
     
@@ -229,7 +233,7 @@ class CodeReviewerAgent:
             return state
         
         state["current_step"] = "deep_evaluation"
-        print("🔬 Running deep evaluation with custom metrics...")
+        logger.info("🔬 Running deep evaluation with custom metrics...")
         
         try:
             # Run the deep evaluation in a thread pool to avoid blocking
@@ -245,16 +249,16 @@ class CodeReviewerAgent:
             if "error" not in result:
                 overall_score = result.get("overall_score", 0)
                 summary = result.get("summary", "No summary available")
-                print(f"✅ Deep evaluation completed: Overall score {overall_score}/1.0")
+                logger.info(f"✅ Deep evaluation completed: Overall score {overall_score}/1.0")
                 if summary:
                     first_line = summary.splitlines()[0] if summary else 'No summary'
-                    print(f"   Summary: {first_line}")
+                    logger.info(f"   Summary: {first_line}")
             else:
-                print(f"⚠️ Deep evaluation completed with issues")
+                logger.info(f"⚠️ Deep evaluation completed with issues")
             
         except Exception as e:
             state["error"] = f"Deep evaluation failed: {str(e)}"
-            print(f"❌ Deep evaluation error: {e}")
+            logger.error(f"❌ Deep evaluation error: {e}")
         
         return state    
     async def security_analysis_node(self, state: CodeReviewState) -> CodeReviewState:
@@ -263,7 +267,7 @@ class CodeReviewerAgent:
             return state
         
         state["current_step"] = "security_analysis"
-        print("🛡️ Running security and quality analysis...")
+        logger.info("🛡️ Running security and quality analysis...")
         
         try:
             security_tool = self.security_analyzer.get_tool()
@@ -274,24 +278,24 @@ class CodeReviewerAgent:
                 overall = result.get("overall_assessment", {})
                 security_score = overall.get("average_security_score", 0)
                 security_rating = overall.get("security_rating", "UNKNOWN")
-                print(f"✅ Security analysis completed: {security_rating} ({security_score}/10)")
+                logger.info(f"✅ Security analysis completed: {security_rating} ({security_score}/10)")
             else:
-                print(f"⚠️ Security analysis completed with issues")
+                logger.info(f"⚠️ Security analysis completed with issues")
             
         except Exception as e:
             state["error"] = f"Security analysis failed: {str(e)}"
-            print(f"❌ Security analysis error: {e}")
+            logger.error(f"❌ Security analysis error: {e}")
         
         return state
     
     async def generate_reports_node(self, state: CodeReviewState) -> CodeReviewState:
         """Generate consolidated reports"""
         if state.get("error"):
-            print("❌ Skipping report generation due to previous errors")
+            logger.info("❌ Skipping report generation due to previous errors")
             return state
                 
         state["current_step"] = "generate_reports"
-        print("📋 Generating consolidated reports...")
+        logger.info("📋 Generating consolidated reports...")
         
         try:
             reporter_tool = self.consolidated_reporter.get_tool()
@@ -303,11 +307,11 @@ class CodeReviewerAgent:
                 report_dir = result.get("report_directory")
                 
                 if html_path and os.path.exists(html_path):
-                    print(f"✅ Consolidated reports generated successfully!")
-                    print(f"   🌐 HTML Report: file://{os.path.abspath(html_path)}")
-                    print(f"   📁 Location: {report_dir}")
+                    logger.info(f"✅ Consolidated reports generated successfully!")
+                    logger.info(f"   🌐 HTML Report: file://{os.path.abspath(html_path)}")
+                    logger.info(f"   📁 Location: {report_dir}")
                     
-                    # Print final summary
+                    # logger.info final summary
                     self._print_final_summary(state)
                 else:
                     state["error"] = "Report files were not created properly"
@@ -316,7 +320,7 @@ class CodeReviewerAgent:
             
         except Exception as e:
             state["error"] = f"Report generation failed: {str(e)}"
-            print(f"❌ Report generation error: {e}")
+            logger.error(f"❌ Report generation error: {e}")
         
         return state
     
@@ -361,28 +365,28 @@ class CodeReviewerAgent:
         return f"{analyzed_files} files, {total_issues} issues"
     
     def _print_final_summary(self, state: CodeReviewState):
-        """Print comprehensive final summary"""
-        print("\n" + "="*60)
-        print("🎉 CODE REVIEW COMPLETED SUCCESSFULLY!")
-        print("="*60)
+        """logger.info comprehensive final summary"""
+        logger.info("\n" + "="*60)
+        logger.info("🎉 CODE REVIEW COMPLETED SUCCESSFULLY!")
+        logger.info("="*60)
         
         # Standards summary
         if state.get("standards_result"):
             standards_summary = self._calculate_standards_summary(state["standards_result"])
-            print(f"📏 Standards: {standards_summary}")
+            logger.info(f"📏 Standards: {standards_summary}")
         
         # Requirements summary
         if state.get("requirement_validation") and "skipped" not in state["requirement_validation"]:
             req_data = state["requirement_validation"]
             if "error" not in req_data:
                 coverage_score = req_data.get("alignment_analysis", {}).get("overall_alignment_score", 0)
-                print(f"🔍 Requirements: {coverage_score:.1%} alignment")
+                logger.info(f"🔍 Requirements: {coverage_score:.1%} alignment")
         
         # Deep evaluation summary
         if state.get("deep_evaluation") and "error" not in state["deep_evaluation"]:
             deep_eval_data = state["deep_evaluation"]
             overall_score = deep_eval_data.get("overall_scores", {}).get("overall_score", 0)
-            print(f"🔬 Deep Evaluation: {overall_score}/5.0 overall")
+            logger.info(f"🔬 Deep Evaluation: {overall_score}/5.0 overall")
         
         # Security summary
         if state.get("security_analysis") and "error" not in state["security_analysis"]:
@@ -390,18 +394,18 @@ class CodeReviewerAgent:
             overall = security_data.get("overall_assessment", {})
             security_score = overall.get("average_security_score", 0)
             security_rating = overall.get("security_rating", "UNKNOWN")
-            print(f"🛡️ Security: {security_rating} ({security_score}/10)")
+            logger.info(f"🛡️ Security: {security_rating} ({security_score}/10)")
         
         # Report locations
         if state.get("consolidated_report"):
             report_data = state["consolidated_report"]
             html_path = report_data.get("html_report_path")
             if html_path:
-                print(f"\n📊 Reports Generated:")
-                print(f"   🌐 Main Report: file://{os.path.abspath(html_path)}")
-                print(f"   📁 Directory: {report_data.get('report_directory')}")
+                logger.info(f"\n📊 Reports Generated:")
+                logger.info(f"   🌐 Main Report: file://{os.path.abspath(html_path)}")
+                logger.info(f"   📁 Directory: {report_data.get('report_directory')}")
         
-        print("="*60)
+        logger.info("="*60)
     
     # Public API methods
     async def review_files(self, file_paths: List[str], requirements: Optional[Dict] = None) -> Dict:
@@ -420,7 +424,7 @@ class CodeReviewerAgent:
             requirements=requirements
         )
         
-        print(f"🚀 Starting code review for {len(file_paths)} files... {file_paths}")
+        logger.info(f"🚀 Starting code review for {len(file_paths)} files... {file_paths}")
         final_state = await self.workflow.ainvoke(initial_state)
         return dict(final_state)
     
@@ -455,7 +459,7 @@ class CodeReviewerAgent:
             requirements=requirements
         )
         
-        print(f"🚀 Starting code review for direct code input...")
+        logger.info(f"🚀 Starting code review for direct code input...")
         final_state = await self.workflow.ainvoke(initial_state)
         return dict(final_state)
     

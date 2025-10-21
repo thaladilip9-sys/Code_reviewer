@@ -7,7 +7,10 @@ from typing import Dict, List, Any, Optional
 from langchain.agents import Tool
 from langchain.schema import HumanMessage, SystemMessage
 from src.utils.langchain_openai import OpenAILLM
+from src.utils.logger import get_logger, logger_manager
 
+# Get logger instance
+logger = get_logger()
 class SpecValidator:
     """
     Validates Python code against specification document using ONLY rules from YAML
@@ -25,15 +28,15 @@ class SpecValidator:
         try:
             with open(self.spec_file_path, 'r', encoding='utf-8') as f:
                 spec = yaml.safe_load(f)
-                print(f"✅ Loaded specification: {spec.get('specification', {}).get('name', 'Unknown')}")
+                logger.info(f"✅ Loaded specification: {spec.get('specification', {}).get('name', 'Unknown')}")
                 return spec
         except Exception as e:
-            print(f"❌ Failed to load specification: {e}")
+            logger.error(f"❌ Failed to load specification: {e}")
             return {}
     
     def validate_code(self, state: Dict) -> Dict:
         """Validate code using rules from YAML specification - SYNC version"""
-        print("🧠 Starting pure YAML-driven specification validation...")
+        logger.info("🧠 Starting pure YAML-driven specification validation...")
         
         try:
             files = state.get("files", [])
@@ -59,7 +62,7 @@ class SpecValidator:
             
         except Exception as e:
             error_msg = f"Specification validation failed: {str(e)}"
-            print(f"❌ {error_msg}")
+            logger.error(f"❌ {error_msg}")
             return {"error": error_msg}
     
     def _run_in_thread(self, files: List[Dict]) -> Dict:
@@ -76,9 +79,9 @@ class SpecValidator:
     async def _run_pure_yaml_validation(self, files: List[Dict]) -> Dict:
         """Run validation using ONLY rules defined in YAML specification"""
         
-        print("=" * 70)
-        print("🔄 PURE YAML-DRIVEN VALIDATION")
-        print("=" * 70)
+        logger.info("=" * 70)
+        logger.info("🔄 PURE YAML-DRIVEN VALIDATION")
+        logger.info("=" * 70)
         
         validation_results = {
             "specification_used": self.specification.get('specification', {}),
@@ -88,11 +91,11 @@ class SpecValidator:
         
         # Get all categories from YAML that have rules
         categories = self._get_categories_with_rules()
-        print(f"📊 Found {len(categories)} categories with rules in YAML")
+        logger.info(f"📊 Found {len(categories)} categories with rules in YAML")
         
         # Validate each category that has rules
         for category in categories:
-            print(f"\n🎯 Validating {category.replace('_', ' ').title()}...")
+            logger.info(f"\n🎯 Validating {category.replace('_', ' ').title()}...")
             category_results = await self._validate_yaml_category(files, category)
             validation_results["validation_steps"][category] = category_results
         
@@ -127,7 +130,7 @@ class SpecValidator:
         
         # Get rules for this category directly from YAML
         category_rules = self._get_yaml_rules_for_category(category)
-        print(f"   📝 Applying {len(category_rules)} rules from YAML")
+        logger.info(f"   📝 Applying {len(category_rules)} rules from YAML")
         
         if not category_rules:
             return {
@@ -192,28 +195,42 @@ class SpecValidator:
             HumanMessage(content=prompt)
         ]
         
-        print(f"   💬 Running {category} analysis...")
+        logger.info(f"   💬 Running {category} analysis...")
         full_response = ""
+        chunk_count = 0
+        start_time = time.time()
         
         try:
             # Collect streaming response without printing
             async for chunk in self.streaming_llm.astream(messages):
                 content = chunk.content if hasattr(chunk, 'content') else str(chunk)
-                # time.sleep(0.3)
                 full_response += content
+                chunk_count += 1
             
-            print(f"   ✅ {category} analysis completed")
+            end_time = time.time()
+            duration = end_time - start_time
+            
+            logger.info(f"   ✅ {category} analysis completed - {chunk_count} chunks in {duration:.1f}s")
+            logger.info(f"   📊 Generated {len(full_response):,} characters of analysis")
+            logger.info(f"   📋 Applied {len(rules)} YAML rules")
             
             # Return the collected response as part of the result
             return {
                 "streaming_content": full_response,
                 "category": category,
-                "rules_applied": [rule.get('rule_id', 'unknown') for rule in rules]
+                "rules_applied": [rule.get('rule_id', 'unknown') for rule in rules],
+                "analysis_length": len(full_response),
+                "chunk_count": chunk_count,
+                "processing_time": duration
             }
             
         except Exception as e:
-            print(f"   ❌ {category} analysis failed: {e}")
-            return {"error": f"Streaming analysis failed: {str(e)}"}
+            logger.error(f"   ❌ {category} analysis failed: {e}")
+            return {
+                "error": f"Streaming analysis failed: {str(e)}",
+                "category": category,
+                "rules_applied": []
+            }
     
     def _get_yaml_rules_for_category(self, category: str) -> List[Dict]:
         """Get rules for category directly from YAML structure"""
@@ -341,19 +358,19 @@ class SpecValidator:
     #         HumanMessage(content=prompt)
     #     ]
         
-    #     print(f"   💬 Streaming {category} analysis...")
+    #     logger.info(f"   💬 Streaming {category} analysis...")
     #     full_response = ""
         
     #     try:
     #         async for chunk in self.streaming_llm.astream(messages):
     #             content = chunk.content if hasattr(chunk, 'content') else str(chunk)
-    #             print(content, end="", flush=True)
+    #             logger.info(content, end="", flush=True)
     #             full_response += content
             
-    #         print(f"\n   ✅ {category} streaming completed")
+    #         logger.info(f"\n   ✅ {category} streaming completed")
     #         return full_response
     #     except Exception as e:
-    #         print(f"\n   ❌ {category} streaming failed: {e}")
+    #         logger.info(f"\n   ❌ {category} streaming failed: {e}")
     #         return f"Streaming analysis failed: {str(e)}"
     
     def _build_yaml_rules_description(self, rules: List[Dict]) -> str:

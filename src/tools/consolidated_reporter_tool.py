@@ -4,7 +4,10 @@ import json
 from datetime import datetime
 from typing import Dict, List, Any
 from langchain.agents import Tool
+from src.utils.logger import get_logger, logger_manager
 
+# Get logger instance
+logger = get_logger()
 class ConsolidatedReporter:
     """
     Generates comprehensive HTML reports from all analysis tools.
@@ -17,7 +20,7 @@ class ConsolidatedReporter:
     
     def generate_consolidated_report(self, state: Dict) -> Dict:
         """Generate comprehensive HTML report from all analyses"""
-        print("📋 Generating comprehensive HTML report...")
+        logger.info("📋 Generating comprehensive HTML report...")
         
         try:
             # Create report directory
@@ -48,12 +51,12 @@ class ConsolidatedReporter:
                 "json_summary_path": json_file
             }
             
-            print(f"✅ Comprehensive HTML report generated: {html_file}")
+            logger.info(f"✅ Comprehensive HTML report generated: {html_file}")
             return result_state
             
         except Exception as e:
             error_state = {"error": f"Report generation failed: {str(e)}"}
-            print(f"❌ Report generation error: {e}")
+            logger.error(f"❌ Report generation error: {e}")
             return error_state
     
     def _extract_analysis_data(self, state: Dict) -> Dict:

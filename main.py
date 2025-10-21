@@ -4,7 +4,10 @@ import os,warnings
 from src.agents.code_reviewer_agent import create_code_review_agent
 # Add at the very beginning of main.py
 # Suppress the specific event loop warning
+from src.utils.logger import get_logger, logger_manager
 
+# Get logger instance
+logger = get_logger()
 import asyncio
 # asyncio.get_event_loop().set_debug(False)  # Disable asyncio debug mode
 async def main():
@@ -39,7 +42,7 @@ async def main():
         ]
     }
     
-    print("🚀 Starting comprehensive code review...")
+    logger.info("🚀 Starting comprehensive code review...")
     print("=" * 60)
     sample_dir=r"sample_code_repo"
     # # Example 1: Review entire directory without requirements
@@ -49,10 +52,10 @@ async def main():
     print("\n" + "=" * 60)
     
     # Example 2: Review directory with requirements
-    print("\n1. 📁 Reviewing directory WITH requirements...")
+    logger.info("\n1. 📁 Reviewing directory WITH requirements...")
     results_with_reqs = await agent.review_directory(sample_dir, requirements)
     
-    print("\n" + "=" * 60)
+    logger.info("\n" + "=" * 60)
 
 def Sample():
     print("AAAAAAAAA")
