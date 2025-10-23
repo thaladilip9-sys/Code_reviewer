@@ -8,6 +8,7 @@ from src.tools.security_analyzer import SecurityQualityAnalyzer
 from src.tools.consolidated_reporter_tool import ConsolidatedReporter
 from src.tools.spec_validator_tool import SpecValidator
 from src.services.file_reader_service import FileReader
+from src.services.json_result_saver import JSONResultSaver
 import os
 import asyncio,datetime
 from src.utils.logger import get_logger, logger_manager
@@ -21,6 +22,9 @@ class CodeReviewState(Dict):
     files: Optional[List[Dict]] = None
     file_paths: Optional[List[str]] = None
     requirements: Optional[Dict] = None
+    
+    # Session management
+    session_id: Optional[str] = None
     
     # Analysis results
     standards_result: Optional[Dict] = None
@@ -55,6 +59,9 @@ class CodeReviewerAgent:
         self.consolidated_reporter = ConsolidatedReporter(output_dir)
         self.spec_validator = SpecValidator()
         
+        # Initialize JSON result saver
+        self.json_saver = JSONResultSaver(output_dir)
+        
         # Build workflow
         self.workflow = self._build_workflow()
     
@@ -77,6 +84,24 @@ class CodeReviewerAgent:
         workflow.add_edge("generate_reports", END)
         
         return workflow.compile()
+    
+    def _save_node_result(self, state: CodeReviewState, node_name: str, result_message: str) -> str:
+        """Helper method to save node result message with session ID"""
+        if not state.get("session_id"):
+            state["session_id"] = self.json_saver.generate_session_id()
+            logger.info(f"🆔 Generated session ID: {state['session_id']}")
+        
+        try:
+            saved_path = self.json_saver.save_node_result(
+                state["session_id"], 
+                node_name, 
+                result_message
+            )
+            logger.info(f"💾 Saved {node_name} result message")
+            return saved_path
+        except Exception as e:
+            logger.error(f"❌ Failed to save {node_name} result: {e}")
+            return None
     
     async def read_files_node(self, state: CodeReviewState) -> CodeReviewState:
         """Read files from provided paths or direct code"""
@@ -120,6 +145,15 @@ class CodeReviewerAgent:
             state["error"] = f"Error reading files: {str(e)}"
             logger.error(f"❌ File reading error: {e}")
         
+        # Save read_files result message
+        files_count = len(state.get('files', []))
+        if state.get('error'):
+            result_message = f"Error reading files: {state.get('error')}"
+        else:
+            result_message = f"Successfully read {files_count} files"
+        
+        self._save_node_result(state, "read_files", result_message)
+        
         return state
     
     async def spec_validation_node(self, state: CodeReviewState) -> CodeReviewState:
@@ -139,7 +173,7 @@ class CodeReviewerAgent:
                 overall_score = result.get("overall_metrics", {}).get("overall_compliance_score", 0)
                 logger.info(f"✅ YAML specification validation completed: Score {overall_score}%")
                 import json
-                with open("./yaml_spec_output.json",'w') as f:
+                with open("./spec_validationoutput.json",'w') as f:
                     json.dump(result,f,indent=4) 
                 
                 # logger.info category summary
@@ -152,6 +186,15 @@ class CodeReviewerAgent:
         except Exception as e:
             state["error"] = f"Specification validation failed: {str(e)}"
             logger.error(f"❌ Specification validation error: {e}")
+        
+        # Save spec_validation result message
+        if state.get('error'):
+            result_message = f"Specification validation failed: {state.get('error')}"
+        else:
+            score = state.get("spec_validation", {}).get("overall_metrics", {}).get("overall_compliance_score", 0)
+            result_message = f"Specification validation completed with {score}% compliance score"
+        
+        self._save_node_result(state, "spec_validation", result_message)
         
         return state
     
@@ -176,6 +219,15 @@ class CodeReviewerAgent:
         except Exception as e:
             state["error"] = f"Standards analysis failed: {str(e)}"
             logger.error(f"❌ Standards analysis error: {e}")
+        
+        # Save standards_check result message
+        if state.get('error'):
+            result_message = f"Standards analysis failed: {state.get('error')}"
+        else:
+            summary = self._calculate_standards_summary(state.get("standards_result", {}))
+            result_message = f"Standards analysis completed: {summary}"
+        
+        self._save_node_result(state, "standards_check", result_message)
         
         return state
     
@@ -207,14 +259,14 @@ class CodeReviewerAgent:
             requirement_tool = self.requirement_validator.get_tool()
             result = requirement_tool.func(state)
 
-            # import json
-            # with open("result.json",'w') as f:
-            #     json.dump(result,f,indent=4)
-
+        
         
             # logger.info("requirement_validation", state)
             state["requirement_validation"] = result
-            
+            import json
+            with open("requirement_validation.json",'w') as f:
+                json.dump(result,f,indent=4)
+
             if "error" not in result:
                 coverage_score = result.get("alignment_analysis", {}).get("overall_alignment_score", 0)
                 logger.info(f"✅ Requirement validation completed: Score {coverage_score:.2f}")
@@ -224,6 +276,17 @@ class CodeReviewerAgent:
         except Exception as e:
             state["error"] = f"Requirement validation failed: {str(e)}"
             logger.error(f"❌ Requirement validation error: {e}")
+        
+        # Save requirement_validation result message
+        if state.get('error'):
+            result_message = f"Requirement validation failed: {state.get('error')}"
+        elif state.get("requirement_validation", {}).get("skipped", False):
+            result_message = "Requirement validation skipped: No requirements provided"
+        else:
+            score = state.get("requirement_validation", {}).get("alignment_analysis", {}).get("overall_alignment_score", 0)
+            result_message = f"Requirement validation completed with {score:.1%} alignment score"
+        
+        self._save_node_result(state, "requirement_validation", result_message)
         
         return state
     
@@ -260,6 +323,15 @@ class CodeReviewerAgent:
             state["error"] = f"Deep evaluation failed: {str(e)}"
             logger.error(f"❌ Deep evaluation error: {e}")
         
+        # Save deep_evaluation result message
+        if state.get('error'):
+            result_message = f"Deep evaluation failed: {state.get('error')}"
+        else:
+            score = state.get("deep_evaluation", {}).get("overall_score", 0)
+            result_message = f"Deep evaluation completed with {score}/1.0 overall score"
+        
+        self._save_node_result(state, "deep_evaluation", result_message)
+        
         return state    
     async def security_analysis_node(self, state: CodeReviewState) -> CodeReviewState:
         """Perform security and quality analysis"""
@@ -285,6 +357,16 @@ class CodeReviewerAgent:
         except Exception as e:
             state["error"] = f"Security analysis failed: {str(e)}"
             logger.error(f"❌ Security analysis error: {e}")
+        
+        # Save security_analysis result message
+        if state.get('error'):
+            result_message = f"Security analysis failed: {state.get('error')}"
+        else:
+            score = state.get("security_analysis", {}).get("overall_assessment", {}).get("average_security_score", 0)
+            rating = state.get("security_analysis", {}).get("overall_assessment", {}).get("security_rating", "UNKNOWN")
+            result_message = f"Security analysis completed: {rating} rating ({score}/10)"
+        
+        self._save_node_result(state, "security_analysis", result_message)
         
         return state
     
@@ -321,6 +403,18 @@ class CodeReviewerAgent:
         except Exception as e:
             state["error"] = f"Report generation failed: {str(e)}"
             logger.error(f"❌ Report generation error: {e}")
+        
+        # Save generate_reports result message
+        if state.get('error'):
+            result_message = f"Report generation failed: {state.get('error')}"
+        else:
+            html_path = state.get("consolidated_report", {}).get("html_report_path")
+            if html_path:
+                result_message = f"Reports generated successfully: {html_path}"
+            else:
+                result_message = "Report generation completed but no HTML path found"
+        
+        self._save_node_result(state, "generate_reports", result_message)
         
         return state
     
@@ -421,7 +515,8 @@ class CodeReviewerAgent:
         """
         initial_state = CodeReviewState(
             file_paths=file_paths,
-            requirements=requirements
+            requirements=requirements,
+            session_id=self.json_saver.generate_session_id()
         )
         
         logger.info(f"🚀 Starting code review for {len(file_paths)} files... {file_paths}")
@@ -456,7 +551,8 @@ class CodeReviewerAgent:
         """
         initial_state = CodeReviewState(
             code=code,
-            requirements=requirements
+            requirements=requirements,
+            session_id=self.json_saver.generate_session_id()
         )
         
         logger.info(f"🚀 Starting code review for direct code input...")
@@ -484,6 +580,18 @@ class CodeReviewerAgent:
         }
         
         return await self.review_files(file_paths, requirements)
+    
+    def get_session_results(self, session_id: str) -> Dict:
+        """
+        Retrieve all results for a specific session.
+        
+        Args:
+            session_id: Session identifier to retrieve results for
+            
+        Returns:
+            Dictionary containing all session results
+        """
+        return self.json_saver.get_session_results(session_id)
 
 # Utility function for easy usage
 async def create_code_review_agent(output_dir: str = "code_review_reports") -> CodeReviewerAgent:

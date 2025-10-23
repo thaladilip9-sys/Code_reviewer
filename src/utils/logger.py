@@ -78,7 +78,7 @@ class CodeReviewLogger:
         
         # Generate log filename with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        log_file = os.path.join(log_dir, f"code_review_{timestamp}.log")
+        log_file = os.path.join(log_dir, f"code_review.log")
         
         # Create logger
         self.logger = logging.getLogger("CodeReviewAgent")
